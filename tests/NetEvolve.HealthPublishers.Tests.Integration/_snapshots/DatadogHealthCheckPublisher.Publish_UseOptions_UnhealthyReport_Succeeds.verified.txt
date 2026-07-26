@@ -1,0 +1,13 @@
+﻿{
+  AlertType: error,
+  Tags: [
+    system_identifier:integration-tests,
+    status:Unhealthy
+  ],
+  Text:
+Overall status: Unhealthy, elapsed 5ms.
+%%%
+- **self**: Unhealthy (5ms) - boom
+%%%,
+  Title: Health check report: Unhealthy
+}

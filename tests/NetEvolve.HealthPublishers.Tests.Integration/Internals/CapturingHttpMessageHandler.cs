@@ -1,6 +1,7 @@
 namespace NetEvolve.HealthPublishers.Tests.Integration.Internals;
 
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ internal sealed class CapturingHttpMessageHandler : DelegatingHandler
 {
     public string? CapturedRequestBody { get; private set; }
 
+    public HttpRequestHeaders? CapturedRequestHeaders { get; private set; }
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken
@@ -21,6 +24,7 @@ internal sealed class CapturingHttpMessageHandler : DelegatingHandler
         CapturedRequestBody = request.Content is null
             ? null
             : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        CapturedRequestHeaders = request.Headers;
 
         return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }

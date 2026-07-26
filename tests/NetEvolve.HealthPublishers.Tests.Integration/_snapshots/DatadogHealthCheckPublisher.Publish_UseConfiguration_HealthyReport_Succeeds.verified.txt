@@ -1,0 +1,9 @@
+﻿{
+  AlertType: success,
+  Tags: [
+    system_identifier:integration-tests,
+    status:Healthy
+  ],
+  Text: Overall status: Healthy, elapsed 5ms.,
+  Title: Health check report: Healthy
+}

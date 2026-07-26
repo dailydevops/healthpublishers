@@ -19,6 +19,7 @@ internal static class HealthPublisherArchitecture
     {
         System.Reflection.Assembly[] assemblies =
         [
+            typeof(Datadog.DatadogOptions).Assembly,
             typeof(Seq.SeqOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
         ];
