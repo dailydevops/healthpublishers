@@ -19,8 +19,5 @@
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.UnitTestAttribute" />
-    <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.TestGroupAttribute">
-      <_Parameter1>Z00TestGroup</_Parameter1>
-    </AssemblyAttribute>
   </ItemGroup>
 </Project>
