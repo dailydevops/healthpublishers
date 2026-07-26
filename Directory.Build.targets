@@ -1,0 +1,18 @@
+<Project>
+  <ItemGroup Label="Test compability" Condition=" '$(IsTestableProject)' == 'false' ">
+    <InternalsVisibleTo Include="NetEvolve.HealthPublishers.Tests.Architecture" />
+    <InternalsVisibleTo Include="NetEvolve.HealthPublishers.Tests.Integration" />
+    <InternalsVisibleTo Include="NetEvolve.HealthPublishers.Tests.Unit" />
+  </ItemGroup>
+  <PropertyGroup Label="Settings for test projects" Condition=" '$(IsTestableProject)' == 'true' ">
+    <NoWarn>$(NoWarn);CS8604;CA2007</NoWarn>
+  </PropertyGroup>
+  <Target Name="EnsureREADME" BeforeTargets="DispatchToInnerBuilds;BeforeBuild">
+    <Warning
+      Code="NEP0001"
+      Text="Missing README, please provide a package README.md for this package."
+      Condition=" '$(IsTestableProject)' == 'false' and '$(IsXampleProject)' == 'false' and !Exists('$(ProjectDir)README.md') "
+      File="$(ProjectName)"
+    />
+  </Target>
+</Project>

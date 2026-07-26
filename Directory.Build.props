@@ -1,15 +1,23 @@
 <Project>
-  <PropertyGroup Label="Package settings">
-    <Title>$(MSBuildProjectName)</Title>
-    <Description></Description>
-    <RepositoryUrl></RepositoryUrl>
-    <PackageProjectUrl></PackageProjectUrl>
-    <PackageReleaseNotes>$(PackageProjectUrl)/releases</PackageReleaseNotes>
-    <PackageTags></PackageTags>
-    <CopyrightYearStart>2024</CopyrightYearStart>
+  <PropertyGroup Label="General settings for all projects">
+    <_ProjectTargetFrameworks>net8.0;net9.0;net10.0</_ProjectTargetFrameworks>
+    <_TestTargetFrameworks>net8.0;net9.0;net10.0</_TestTargetFrameworks>
+    <_TestTargetFrameworks Condition=" '$(BuildingInsideVisualStudio)' == 'true' ">net10.0</_TestTargetFrameworks>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <!-- Workaround, until https://github.com/GitTools/GitVersion/pull/4206 is released -->
-    <GitVersionTargetFramework>net8.0</GitVersionTargetFramework>
+    <GitVersionTargetFramework>net10.0</GitVersionTargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Label="Settings for non test projects">
+    <Title>$(MSBuildProjectName)</Title>
+    <RepositoryUrl>https://github.com/dailydevops/healthpublishers.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/dailydevops/healthpublishers</PackageProjectUrl>
+    <PackageTags>healthpublisher;healthpublishers;healthcheck;health;diagnostics</PackageTags>
+    <PackageReleaseNotes>$(PackageProjectUrl)/releases/</PackageReleaseNotes>
+    <CopyrightYearStart>2026</CopyrightYearStart>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DisableRecommendedPackage>Meziantou.Analyzer</DisableRecommendedPackage>
   </PropertyGroup>
 </Project>
