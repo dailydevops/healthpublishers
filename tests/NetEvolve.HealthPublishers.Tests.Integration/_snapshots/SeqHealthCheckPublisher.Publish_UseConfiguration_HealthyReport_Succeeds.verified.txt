@@ -1,0 +1,7 @@
+﻿{
+  ElapsedMilliseconds: 5.0,
+  Level: Information,
+  MessageTemplate: Health check report {Status} in {ElapsedMilliseconds}ms,
+  Status: Healthy,
+  SystemIdentifier: integration-tests
+}

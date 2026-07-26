@@ -1,0 +1,25 @@
+﻿{
+  ElapsedMilliseconds: 123.0,
+  Entries: {
+    cache: {
+      Description: slow response,
+      ElapsedMilliseconds: 120.0,
+      Status: Degraded,
+      Tags: [
+        cache
+      ]
+    },
+    database: {
+      ElapsedMilliseconds: 3.0,
+      Status: Healthy,
+      Tags: [
+        db,
+        sql
+      ]
+    }
+  },
+  Level: Warning,
+  MessageTemplate: Health check report {Status} in {ElapsedMilliseconds}ms,
+  Status: Degraded,
+  SystemIdentifier: integration-tests
+}
