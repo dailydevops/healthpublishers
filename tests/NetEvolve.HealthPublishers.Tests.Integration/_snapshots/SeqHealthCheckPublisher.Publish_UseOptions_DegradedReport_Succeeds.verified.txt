@@ -1,0 +1,14 @@
+﻿{
+  ElapsedMilliseconds: 5.0,
+  Entries: {
+    self: {
+      Description: slow,
+      ElapsedMilliseconds: 5.0,
+      Status: Degraded
+    }
+  },
+  Level: Warning,
+  MessageTemplate: Health check report {Status} in {ElapsedMilliseconds}ms,
+  Status: Degraded,
+  SystemIdentifier: integration-tests
+}

@@ -21,8 +21,10 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/NetEvolve.HealthPublishers.Abstractions/NetEvolve.HealthPublishers.Abstractions.csproj" />
+    <Project Path="src/NetEvolve.HealthPublishers.Seq/NetEvolve.HealthPublishers.Seq.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/NetEvolve.HealthPublishers.Tests.Architecture/NetEvolve.HealthPublishers.Tests.Architecture.csproj" />
     <Project Path="tests/NetEvolve.HealthPublishers.Tests.Integration/NetEvolve.HealthPublishers.Tests.Integration.csproj" />
     <Project Path="tests/NetEvolve.HealthPublishers.Tests.Unit/NetEvolve.HealthPublishers.Tests.Unit.csproj" />
   </Folder>

@@ -1,22 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>$(_TestTargetFrameworks)</TargetFrameworks>
     <OutputType>Exe</OutputType>
-    <NeutralLanguage>en</NeutralLanguage>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetEvolve.Extensions.TUnit" />
-    <PackageReference Include="Testcontainers" />
-    <PackageReference Include="Testcontainers.Seq" />
+    <PackageReference Include="TngTech.ArchUnitNET.TUnit" />
     <PackageReference Include="TUnit" />
-    <PackageReference Include="Verify.TUnit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Abstractions\NetEvolve.HealthPublishers.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Seq\NetEvolve.HealthPublishers.Seq.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.IntegrationTestAttribute" />
+    <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.ArchitectureTestAttribute" />
   </ItemGroup>
 </Project>

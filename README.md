@@ -13,3 +13,7 @@ Additional packages are tracked as [GitHub issues](https://github.com/dailydevop
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Made with ❤️ by the NetEvolve Team**
