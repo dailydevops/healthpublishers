@@ -19,11 +19,12 @@ internal static class HealthPublisherArchitecture
     {
         System.Reflection.Assembly[] assemblies =
         [
+            typeof(ApplicationInsights.ApplicationInsightsOptions).Assembly,
             typeof(Datadog.DatadogOptions).Assembly,
-            typeof(Seq.SeqOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
             typeof(Prometheus.Metrics.PrometheusMetricsOptions).Assembly,
             typeof(Prometheus.PushGateway.PrometheusPushGatewayOptions).Assembly,
+            typeof(Seq.SeqOptions).Assembly,
         ];
 
         return new ArchLoader()
