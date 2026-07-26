@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(_TestTargetFrameworks)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="NetEvolve.Extensions.TUnit" />
+    <PackageReference Include="TUnit" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Abstractions\NetEvolve.HealthPublishers.Abstractions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.IntegrationTestAttribute" />
+    <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.TestGroupAttribute">
+      <_Parameter1>Z00TestGroup</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

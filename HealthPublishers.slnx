@@ -1,0 +1,29 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".filenesting.json" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="Directory.Solution.props" />
+    <File Path="GitVersion.yml" />
+    <File Path="global.json" />
+    <File Path="LICENSE" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+    <File Path="renovate.json" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/NetEvolve.HealthPublishers.Abstractions/NetEvolve.HealthPublishers.Abstractions.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/NetEvolve.HealthPublishers.Tests.Integration/NetEvolve.HealthPublishers.Tests.Integration.csproj" />
+    <Project Path="tests/NetEvolve.HealthPublishers.Tests.Unit/NetEvolve.HealthPublishers.Tests.Unit.csproj" />
+  </Folder>
+</Solution>
