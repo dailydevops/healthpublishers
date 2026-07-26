@@ -1,0 +1,38 @@
+name: Update packages in README.md
+
+on:
+  schedule:
+    # Run every day at 4:21 AM UTC
+    # https://crontab.guru/#21_4_*_*_*
+    - cron: '21 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout repository
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        fetch-depth: 0
+
+    - name: Update packages in README.md
+      run: |
+        ./scripts/Update-Readme.ps1 -WorkingDirectory ${{ github.workspace }}
+      shell: pwsh
+
+    - name: Create Pull Request
+      id: pr
+      uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: 'docs: Update nuget packages in README.md'
+        title: 'docs: Update nuget packages in README.md'
+        body: |
+          This pull request updates the nuget packages in the README.md file.
