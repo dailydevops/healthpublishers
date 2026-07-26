@@ -53,7 +53,7 @@ public static class DependencyInjectionExtensions
     )
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
         if (
             builder.Services.Any(descriptor =>

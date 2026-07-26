@@ -4,11 +4,9 @@ using ArchUnitNET.Domain;
 using ArchUnitNET.TUnit;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NetEvolve.Extensions.TUnit;
-using TUnit.Core.Enums;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
 
 [TestGroup(nameof(Architecture))]
-[RunOn(OS.Windows)]
 public class HealthPublisherTests
 {
     private readonly IObjectProvider<Class> _publishers = Classes()

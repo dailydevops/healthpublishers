@@ -12,42 +12,89 @@ using NetEvolve.HealthPublishers.Seq;
 public sealed class SeqOptionsConfigureTests
 {
     [Test]
-    public void Configure_WhenArgumentNameNull_ThrowArgumentException()
+    public void Configure_WhenArgumentNameWhitespace_ThrowArgumentException()
     {
         // Arrange
         var configure = new SeqOptionsConfigure(new ConfigurationBuilder().Build());
         var options = new SeqOptions();
 
         // Act
-        void Act() => configure.Configure(null, options);
+        void Act() => configure.Configure(" ", options);
 
         // Assert
-        _ = Assert.Throws<ArgumentException>("name", Act);
+        _ = Assert.Throws<ArgumentException>("resolvedName", Act);
     }
 
     [Test]
-    public void Configure_WhenArgumentNameEmpty_ThrowArgumentException()
+    public async Task Configure_WhenArgumentNameNull_UsesDefaultNameSection()
     {
         // Arrange
-        var configure = new SeqOptionsConfigure(new ConfigurationBuilder().Build());
+        var values = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            { "HealthPublishers:Seq:Default:ServerUrl", "https://seq.example.com" },
+        };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var configure = new SeqOptionsConfigure(configuration);
         var options = new SeqOptions();
 
         // Act
-        void Act() => configure.Configure(string.Empty, options);
+        configure.Configure(null, options);
 
         // Assert
-        _ = Assert.Throws<ArgumentException>("name", Act);
+        _ = await Assert.That(options.ServerUrl).IsEqualTo(new Uri("https://seq.example.com"));
     }
 
     [Test]
-    public async Task Validate_WhenNameNull_ReturnFailure()
+    public async Task Configure_WhenArgumentNameEmpty_UsesDefaultNameSection()
     {
         // Arrange
-        var configure = new SeqOptionsConfigure(new ConfigurationBuilder().Build());
+        var values = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            { "HealthPublishers:Seq:Default:ServerUrl", "https://seq.example.com" },
+        };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var configure = new SeqOptionsConfigure(configuration);
         var options = new SeqOptions();
 
         // Act
-        var result = configure.Validate(null, options);
+        configure.Configure(string.Empty, options);
+
+        // Assert
+        _ = await Assert.That(options.ServerUrl).IsEqualTo(new Uri("https://seq.example.com"));
+    }
+
+    [Test]
+    public async Task Configure_WhenCalledWithoutName_UsesDefaultNameSection()
+    {
+        // Arrange
+        var values = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            { "HealthPublishers:Seq:Default:ServerUrl", "https://seq.example.com" },
+        };
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
+        var configure = new SeqOptionsConfigure(configuration);
+        var options = new SeqOptions();
+
+        // Act
+        ((IConfigureOptions<SeqOptions>)configure).Configure(options);
+
+        // Assert
+        _ = await Assert.That(options.ServerUrl).IsEqualTo(new Uri("https://seq.example.com"));
+    }
+
+    [Test]
+    public async Task Validate_WhenNameWhitespace_ReturnFailure()
+    {
+        // Arrange
+        var configure = new SeqOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = new SeqOptions
+        {
+            ServerUrl = new Uri("https://seq.example.com"),
+            SystemIdentifier = "checkout-service",
+        };
+
+        // Act
+        var result = configure.Validate(" ", options);
 
         // Assert
         using (Assert.Multiple())
@@ -55,6 +102,26 @@ public sealed class SeqOptionsConfigureTests
             _ = await Assert.That(result.Failed).IsTrue();
             _ = await Assert.That(result.FailureMessage).IsEqualTo("The name cannot be null or whitespace.");
         }
+    }
+
+    [Test]
+    [Arguments(null)]
+    [Arguments("")]
+    public async Task Validate_WhenNameNullOrEmpty_TreatsAsDefaultNameAndReturnSuccess(string? name)
+    {
+        // Arrange
+        var configure = new SeqOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = new SeqOptions
+        {
+            ServerUrl = new Uri("https://seq.example.com"),
+            SystemIdentifier = "checkout-service",
+        };
+
+        // Act
+        var result = configure.Validate(name, options);
+
+        // Assert
+        _ = await Assert.That(result).IsEqualTo(ValidateOptionsResult.Success);
     }
 
     [Test]

@@ -1,7 +1,6 @@
 ﻿namespace NetEvolve.HealthPublishers.Seq;
 
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -63,8 +62,11 @@ internal sealed class SeqHealthCheckPublisher : IHealthCheckPublisher
             client.DefaultRequestHeaders.Add("X-Seq-ApiKey", options.ApiKey);
         }
 
-        using var content = new StringContent(JsonSerializer.Serialize(clefEvent), Encoding.UTF8);
-        content.Headers.ContentType = new MediaTypeHeaderValue("application/vnd.serilog.clef");
+        using var content = new StringContent(
+            JsonSerializer.Serialize(clefEvent),
+            Encoding.UTF8,
+            "application/vnd.serilog.clef"
+        );
 
         using var response = await client
             .PostAsync(new Uri("ingest/clef", UriKind.Relative), content, cancellationToken)

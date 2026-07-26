@@ -1,6 +1,5 @@
 ﻿namespace NetEvolve.HealthPublishers.Seq;
 
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using static Microsoft.Extensions.Options.ValidateOptionsResult;
@@ -13,16 +12,18 @@ internal sealed class SeqOptionsConfigure : IConfigureNamedOptions<SeqOptions>, 
 
     public void Configure(string? name, SeqOptions options)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        _configuration.Bind($"HealthPublishers:Seq:{name}", options);
+        var resolvedName = string.IsNullOrEmpty(name) ? DependencyInjectionExtensions.DefaultName : name;
+        ArgumentException.ThrowIfNullOrWhiteSpace(resolvedName);
+        _configuration.Bind($"HealthPublishers:Seq:{resolvedName}", options);
     }
 
-    [ExcludeFromCodeCoverage]
     public void Configure(SeqOptions options) => Configure(Options.DefaultName, options);
 
     public ValidateOptionsResult Validate(string? name, SeqOptions options)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        var resolvedName = string.IsNullOrEmpty(name) ? DependencyInjectionExtensions.DefaultName : name;
+
+        if (string.IsNullOrWhiteSpace(resolvedName))
         {
             return Fail("The name cannot be null or whitespace.");
         }
