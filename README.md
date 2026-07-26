@@ -30,21 +30,21 @@ This repository has a sister project, [NetEvolve.HealthChecks](https://github.co
 1. Install a package, for example `NetEvolve.HealthPublishers.Seq`.
 2. Register the publisher:
 
-```csharp
-var builder = WebApplication.CreateBuilder(args);
+    ```csharp
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-    .AddHealthChecks()
-    .AddSeqPublisher(options =>
-    {
-        options.Uri = new Uri("https://seq.example.com");
-        options.SystemIdentifier = "my-service";
-    });
+    builder.Services
+        .AddHealthChecks()
+        .AddSeqPublisher(options =>
+        {
+            options.Uri = new Uri("https://seq.example.com");
+            options.SystemIdentifier = "my-service";
+        });
 
-var app = builder.Build();
+    var app = builder.Build();
 
-app.Run();
-```
+    app.Run();
+    ```
 
 Use any other publisher package the same way - swap `AddSeqPublisher` with the corresponding extension.
 
