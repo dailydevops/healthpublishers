@@ -17,7 +17,11 @@ internal static class HealthPublisherArchitecture
 
     private static Architecture LoadArchitecture()
     {
-        System.Reflection.Assembly[] assemblies = [typeof(Seq.SeqOptions).Assembly];
+        System.Reflection.Assembly[] assemblies =
+        [
+            typeof(Seq.SeqOptions).Assembly,
+            typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
+        ];
 
         return new ArchLoader()
             .LoadAssembliesRecursively(
