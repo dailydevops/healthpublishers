@@ -22,6 +22,7 @@ internal static class HealthPublisherArchitecture
             typeof(ApplicationInsights.ApplicationInsightsOptions).Assembly,
             typeof(AWS.CloudWatch.CloudWatchOptions).Assembly,
             typeof(Datadog.DatadogOptions).Assembly,
+            typeof(Elasticsearch.ElasticsearchOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
             typeof(Prometheus.Metrics.PrometheusMetricsOptions).Assembly,
             typeof(Prometheus.PushGateway.PrometheusPushGatewayOptions).Assembly,

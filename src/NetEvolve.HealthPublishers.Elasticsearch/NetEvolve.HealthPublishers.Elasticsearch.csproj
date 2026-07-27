@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(_ProjectTargetFrameworks)</TargetFrameworks>
+    <Description>Contains an IHealthCheckPublisher implementation that indexes health report results as documents into an Elasticsearch cluster, using Elastic.Clients.Elasticsearch.</Description>
+    <PackageTags>$(PackageTags);elasticsearch;elastic</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Elastic.Clients.Elasticsearch" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+</Project>

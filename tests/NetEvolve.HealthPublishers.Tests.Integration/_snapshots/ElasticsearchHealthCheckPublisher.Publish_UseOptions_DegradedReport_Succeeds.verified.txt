@@ -1,0 +1,10 @@
+﻿{
+  Entries: {
+    self: {
+      Description: slow,
+      Status: Degraded
+    }
+  },
+  Status: Degraded,
+  SystemIdentifier: integration-tests
+}
