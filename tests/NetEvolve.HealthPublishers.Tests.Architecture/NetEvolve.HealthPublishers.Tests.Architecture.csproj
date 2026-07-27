@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Datadog\NetEvolve.HealthPublishers.Datadog.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.OpenTelemetry\NetEvolve.HealthPublishers.OpenTelemetry.csproj" />
+    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.Metrics\NetEvolve.HealthPublishers.Prometheus.Metrics.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.PushGateway\NetEvolve.HealthPublishers.Prometheus.PushGateway.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Seq\NetEvolve.HealthPublishers.Seq.csproj" />
   </ItemGroup>
