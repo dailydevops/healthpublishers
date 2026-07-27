@@ -1,0 +1,4 @@
+﻿{
+  DedupKey: healthpublishers:integration-tests,
+  EventAction: resolve
+}
