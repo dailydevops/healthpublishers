@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Datadog;
+﻿namespace NetEvolve.HealthPublishers.Datadog;
 
 using System.Net.Http;
 using System.Text;
@@ -68,14 +68,18 @@ internal sealed class DatadogHealthCheckPublisher : IHealthCheckPublisher
         _ = response.EnsureSuccessStatusCode();
     }
 
+    // Datadog's Events API caps the `text` field at 4000 characters.
+    private const int MaxTextLength = 4000;
+    private const string ClosingMarker = "%%%";
+
     private static string BuildText(HealthReport report)
     {
         if (report.Entries.Count == 0)
         {
-            return $"Overall status: {report.Status}, elapsed {report.TotalDuration.TotalMilliseconds}ms.";
+            return $"Overall status: {report.Status}, elapsed {report.TotalDuration.TotalMilliseconds:0.##}ms.";
         }
 
-        var builder = new StringBuilder()
+        var builder = new StringBuilder(capacity: 256)
             .Append("Overall status: ")
             .Append(report.Status)
             .Append(", elapsed ")
@@ -102,7 +106,13 @@ internal sealed class DatadogHealthCheckPublisher : IHealthCheckPublisher
             _ = builder.AppendLine();
         }
 
-        return builder.Append("%%%").ToString();
+        var maxContentLength = MaxTextLength - ClosingMarker.Length;
+        if (builder.Length > maxContentLength)
+        {
+            builder.Length = maxContentLength;
+        }
+
+        return builder.Append(ClosingMarker).ToString();
     }
 
     private static string MapAlertType(HealthStatus status) =>

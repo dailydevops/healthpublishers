@@ -3,6 +3,7 @@ namespace NetEvolve.HealthPublishers.Tests.Unit.Datadog;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -146,6 +147,41 @@ public sealed class DatadogHealthCheckPublisherTests
         {
             _ = await Assert.That(request.Body).Contains("database");
             _ = await Assert.That(request.Body).Contains("slow response");
+        }
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenReportTextExceedsMaxLength_TruncatesTextTo4000CharsAndKeepsClosingMarker()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
+        _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new DatadogHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var entries = new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal);
+        for (var i = 0; i < 200; i++)
+        {
+            entries[$"check-{i}"] = new HealthReportEntry(
+                HealthStatus.Healthy,
+                new string('x', 100),
+                TimeSpan.FromMilliseconds(1),
+                null,
+                null
+            );
+        }
+        var report = new HealthReport(entries, TimeSpan.FromMilliseconds(200));
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        var request = factory.Handler.Requests[0];
+        using var document = JsonDocument.Parse(request.Body!);
+        var text = document.RootElement.GetProperty("text").GetString();
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(text!.Length).IsEqualTo(4000);
+            _ = await Assert.That(text).EndsWith("%%%");
         }
     }
 
