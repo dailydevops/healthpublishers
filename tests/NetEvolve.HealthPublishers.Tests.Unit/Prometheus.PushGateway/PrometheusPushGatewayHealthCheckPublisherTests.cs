@@ -422,7 +422,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
 
         // Assert
         var body = factory.Handler.Requests[0].Body!;
-        var typeMatches = Regex.Matches(body, @"^# TYPE (\S+) ", RegexOptions.Multiline);
+        var typeMatches = Regex.Matches(body, @"^# TYPE (\S+) ", RegexOptions.Multiline, TimeSpan.FromSeconds(1));
         var metricNames = typeMatches.Select(match => match.Groups[1].Value).ToArray();
 
         using (Assert.Multiple())
