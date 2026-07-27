@@ -1,0 +1,6 @@
+﻿{
+  ElapsedMilliseconds: 5.0,
+  Message: Health check report Healthy in 5ms,
+  Status: Healthy,
+  SystemIdentifier: integration-tests
+}
