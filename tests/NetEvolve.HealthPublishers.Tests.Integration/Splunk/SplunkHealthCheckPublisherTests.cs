@@ -3,6 +3,7 @@ namespace NetEvolve.HealthPublishers.Tests.Integration.Splunk;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -346,7 +347,9 @@ public sealed class SplunkHealthCheckPublisherTests
                 options.SystemIdentifier = "integration-tests";
             });
 
+#pragma warning disable CA2000 // Disposed together with the DI-owned HttpClient handler
         var handler = new CapturingHttpMessageHandler();
+#pragma warning restore CA2000
         _ = services
             .AddHttpClient(
                 $"{DependencyInjectionExtensions.HttpClientNamePrefix}{DependencyInjectionExtensions.DefaultName}"
@@ -362,11 +365,8 @@ public sealed class SplunkHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        using (Assert.Multiple())
-        {
-            _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
-            _ = await Assert.That(handler.CapturedRequestBody).IsNotNull();
-        }
+        _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
+        await VerifyCapturedRequestStable(handler);
     }
 
     [Test]
@@ -398,8 +398,10 @@ public sealed class SplunkHealthCheckPublisherTests
                 }
             );
 
+#pragma warning disable CA2000 // Disposed together with the DI-owned HttpClient handlers
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();
+#pragma warning restore CA2000
         _ = services
             .AddHttpClient($"{DependencyInjectionExtensions.HttpClientNamePrefix}Internal")
             .AddHttpMessageHandler(() => internalHandler);
@@ -419,22 +421,13 @@ public sealed class SplunkHealthCheckPublisherTests
         }
 
         // Assert
-        using (Assert.Multiple())
-        {
-            _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
-            _ = await Assert.That(publishers.Length).IsEqualTo(2);
-            _ = await Assert.That(internalHandler.CapturedRequestBody).IsNotNull();
-            _ = await Assert.That(externalHandler.CapturedRequestBody).IsNotNull();
-            _ = await Assert
-                .That(internalHandler.CapturedRequestBody)
-                .Contains("\"system_identifier\":\"internal-system\"");
-            _ = await Assert
-                .That(externalHandler.CapturedRequestBody)
-                .Contains("\"system_identifier\":\"external-system\"");
-        }
+        _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
+        _ = await Assert.That(publishers.Length).IsEqualTo(2);
+        await VerifyCapturedRequestStable(internalHandler, "internal");
+        await VerifyCapturedRequestStable(externalHandler, "external");
     }
 
-    private static async Task VerifyCapturedRequest(CapturingHttpMessageHandler handler)
+    private static async Task VerifyCapturedRequest(CapturingHttpMessageHandler handler, string? suffix = null)
     {
         ArgumentNullException.ThrowIfNull(handler.CapturedRequestBody);
 
@@ -449,7 +442,54 @@ public sealed class SplunkHealthCheckPublisherTests
                 .IsEqualTo(Environment.MachineName);
         }
 
-        _ = await Verify(Normalize(root)).IgnoreParametersForVerified();
+        var settings = new VerifySettings();
+        settings.IgnoreParametersForVerified();
+        if (suffix is not null)
+        {
+            settings.UseTextForParameters(suffix);
+        }
+
+        _ = await Verify(Normalize(root), settings);
+    }
+
+    // Elapsed timings come from a real HealthCheckService run and are not deterministic across
+    // machines/runs, so they (and the message text embedding them) are excluded here.
+    private static async Task VerifyCapturedRequestStable(
+        CapturingHttpMessageHandler handler,
+        string? suffix = null,
+        [CallerMemberName] string testName = ""
+    )
+    {
+        ArgumentNullException.ThrowIfNull(handler.CapturedRequestBody);
+
+        using var document = JsonDocument.Parse(handler.CapturedRequestBody);
+        var root = document.RootElement;
+
+        // UseFileName bypasses the auto-detected ClassDataSource<SplunkContainer> parameter,
+        // so each suffix gets its own stable, predictable snapshot file.
+        var fileName = suffix is null
+            ? $"SplunkHealthCheckPublisher.{testName}"
+            : $"SplunkHealthCheckPublisher.{testName}_{suffix}";
+        var settings = new VerifySettings();
+        settings.UseFileName(fileName);
+
+        _ = await Verify(NormalizeStable(root), settings);
+    }
+
+    private static object NormalizeStable(JsonElement root)
+    {
+        var eventElement = root.GetProperty("event");
+
+        return new
+        {
+            Status = eventElement.GetProperty("status").GetString(),
+            SystemIdentifier = eventElement.GetProperty("system_identifier").GetString(),
+            Entries = eventElement
+                .GetProperty("entries")
+                .EnumerateObject()
+                .OrderBy(entry => entry.Name, StringComparer.Ordinal)
+                .ToDictionary(entry => entry.Name, entry => entry.Value.GetProperty("status").GetString()),
+        };
     }
 
     private static object Normalize(JsonElement root)
