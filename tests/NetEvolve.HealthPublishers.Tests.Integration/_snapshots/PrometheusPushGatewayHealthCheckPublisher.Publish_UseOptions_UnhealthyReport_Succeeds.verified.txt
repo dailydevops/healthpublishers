@@ -1,0 +1,15 @@
+﻿# HELP healthcheck_report_status Overall health report status (0=Unhealthy, 1=Degraded, 2=Healthy).
+# TYPE healthcheck_report_status gauge
+healthcheck_report_status{system_identifier="integration-tests",machine_name="placeholder"} 0
+# HELP healthcheck_report_duration_seconds Total duration of the health report execution in seconds.
+# TYPE healthcheck_report_duration_seconds gauge
+healthcheck_report_duration_seconds{system_identifier="integration-tests",machine_name="placeholder"} 0.005
+# HELP healthcheck_last_publish_timestamp_seconds Unix timestamp of the last publish attempt.
+# TYPE healthcheck_last_publish_timestamp_seconds gauge
+healthcheck_last_publish_timestamp_seconds{system_identifier="integration-tests",machine_name="placeholder"} <timestamp>
+# HELP healthcheck_status Health check status per entry (0=Unhealthy, 1=Degraded, 2=Healthy).
+# TYPE healthcheck_status gauge
+healthcheck_status{check="self",description="boom",system_identifier="integration-tests",machine_name="placeholder"} 0
+# HELP healthcheck_duration_seconds Duration of the health check execution in seconds.
+# TYPE healthcheck_duration_seconds gauge
+healthcheck_duration_seconds{check="self",description="boom",system_identifier="integration-tests",machine_name="placeholder"} 0.005
