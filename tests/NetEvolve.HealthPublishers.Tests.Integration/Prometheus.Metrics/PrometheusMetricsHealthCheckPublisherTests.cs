@@ -239,6 +239,62 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         }
     }
 
+    [Test]
+    public async Task PublishAsync_WhenEntriesChurnAcrossManyPublishes_OnlyLatestReportEntriesRemainInRegistry()
+    {
+        // Arrange
+        var (publisher, registry) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
+
+        // Each wave overlaps partially with the previous one, so some checks persist, some disappear, some
+        // reappear later, and some show up for the first time, stressing RemoveStaleEntries across many publishes.
+        string[][] waves =
+        [
+            ["database", "cache", "queue"],
+            ["database", "queue", "search"],
+            ["search"],
+            ["database", "cache"],
+            ["queue", "search", "cache", "gateway"],
+            ["gateway"],
+        ];
+
+        // Act
+        foreach (var wave in waves)
+        {
+            var entries = new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal);
+            foreach (var check in wave)
+            {
+                entries[check] = new HealthReportEntry(
+                    HealthStatus.Healthy,
+                    null,
+                    TimeSpan.FromMilliseconds(1),
+                    null,
+                    null
+                );
+            }
+
+            var report = new HealthReport(entries, TimeSpan.FromMilliseconds(1));
+            await publisher.PublishAsync(report, CancellationToken.None);
+        }
+
+        // Assert
+        var text = await ExportAsTextAsync(registry);
+        var lastWave = waves[^1];
+        var staleChecks = waves.SelectMany(wave => wave).Distinct(StringComparer.Ordinal).Except(lastWave);
+
+        using (Assert.Multiple())
+        {
+            foreach (var check in lastWave)
+            {
+                _ = await Assert.That(text).Contains($"check=\"{check}\"");
+            }
+
+            foreach (var check in staleChecks)
+            {
+                _ = await Assert.That(text).DoesNotContain($"check=\"{check}\"");
+            }
+        }
+    }
+
     private static readonly Regex LastPublishTimestampLine = new(
         @"^healthcheck_last_publish_timestamp_seconds\{[^}]*\} \d+$",
         RegexOptions.Multiline | RegexOptions.Compiled,

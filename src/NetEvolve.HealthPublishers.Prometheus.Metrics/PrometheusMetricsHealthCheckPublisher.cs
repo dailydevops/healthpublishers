@@ -72,7 +72,7 @@ internal sealed class PrometheusMetricsHealthCheckPublisher : IHealthCheckPublis
 
         lock (_lock)
         {
-            staleEntries = new HashSet<(string Check, string Description)>(_knownEntries);
+            staleEntries = [.. _knownEntries];
             staleEntries.ExceptWith(currentEntries);
             _knownEntries = currentEntries;
         }

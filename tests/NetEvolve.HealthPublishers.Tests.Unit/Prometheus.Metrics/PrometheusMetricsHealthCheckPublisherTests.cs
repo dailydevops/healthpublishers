@@ -220,6 +220,96 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         }
     }
 
+    [Test]
+    public async Task PublishAsync_WhenSomeEntriesPersist_RemovesOnlyStaleEntryAndKeepsCurrentOnes()
+    {
+        // Arrange
+        var (publisher, instruments, registry) = CreatePublisher(options =>
+            options.SystemIdentifier = "checkout-service"
+        );
+        var firstReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["database"] = new HealthReportEntry(
+                    HealthStatus.Healthy,
+                    null,
+                    TimeSpan.FromMilliseconds(3),
+                    null,
+                    null
+                ),
+                ["cache"] = new HealthReportEntry(
+                    HealthStatus.Degraded,
+                    "slow response",
+                    TimeSpan.FromMilliseconds(120),
+                    null,
+                    null
+                ),
+            },
+            TimeSpan.FromMilliseconds(123)
+        );
+        var secondReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["database"] = new HealthReportEntry(
+                    HealthStatus.Healthy,
+                    null,
+                    TimeSpan.FromMilliseconds(3),
+                    null,
+                    null
+                ),
+            },
+            TimeSpan.FromMilliseconds(3)
+        );
+
+        // Act
+        await publisher.PublishAsync(firstReport, CancellationToken.None);
+        await publisher.PublishAsync(secondReport, CancellationToken.None);
+
+        // Assert
+        var text = await ExportAsTextAsync(registry);
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(text).DoesNotContain("check=\"cache\"");
+            _ = await Assert.That(text).Contains("check=\"database\"");
+            _ = await Assert
+                .That(
+                    instruments
+                        .EntryStatus.WithLabels("database", string.Empty, "checkout-service", Environment.MachineName)
+                        .Value
+                )
+                .IsEqualTo(2);
+        }
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenSameEntriesRepeatAcrossPublishes_DoesNotRemoveThem()
+    {
+        // Arrange
+        var (publisher, _, registry) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["database"] = new HealthReportEntry(
+                    HealthStatus.Healthy,
+                    null,
+                    TimeSpan.FromMilliseconds(3),
+                    null,
+                    null
+                ),
+            },
+            TimeSpan.FromMilliseconds(3)
+        );
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        var text = await ExportAsTextAsync(registry);
+        _ = await Assert.That(text).Contains("check=\"database\"");
+    }
+
     private static async Task<string> ExportAsTextAsync(CollectorRegistry registry)
     {
         using var stream = new MemoryStream();
