@@ -88,7 +88,7 @@ public static class DependencyInjectionExtensions
 
     internal static TelemetryConfiguration CreateTelemetryConfiguration(string name, IServiceProvider provider)
     {
-        var configuration = new TelemetryConfiguration();
+        var configuration = TelemetryConfiguration.CreateDefault();
         var connectionString = provider
             .GetRequiredService<IOptionsMonitor<ApplicationInsightsOptions>>()
             .Get(name)
