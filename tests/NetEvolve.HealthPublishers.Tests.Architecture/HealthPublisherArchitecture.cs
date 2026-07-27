@@ -23,6 +23,7 @@ internal static class HealthPublisherArchitecture
             typeof(AWS.CloudWatch.CloudWatchOptions).Assembly,
             typeof(Datadog.DatadogOptions).Assembly,
             typeof(Elasticsearch.ElasticsearchOptions).Assembly,
+            typeof(Email.EmailOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
             typeof(Opsgenie.OpsgenieOptions).Assembly,
             typeof(PagerDuty.PagerDutyOptions).Assembly,

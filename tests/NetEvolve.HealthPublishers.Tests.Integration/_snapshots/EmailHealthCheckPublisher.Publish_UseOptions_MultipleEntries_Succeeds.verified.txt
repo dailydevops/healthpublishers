@@ -1,0 +1,12 @@
+﻿{
+  Subject: [Degraded] Health check report - <system-identifier>,
+  Text:
+Health check report Degraded in 123ms
+System: <system-identifier>
+Machine: <machine-name>
+
+Entries:
+- database: Healthy (3ms)
+- cache: Degraded (120ms) - slow response
+
+}

@@ -1,0 +1,87 @@
+namespace NetEvolve.HealthPublishers.Email;
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
+
+/// <summary>
+/// Extensions methods for <see cref="IHealthChecksBuilder"/> to add the Email health check publisher.
+/// </summary>
+public static class DependencyInjectionExtensions
+{
+    /// <summary>
+    /// The name used when no explicit name is provided.
+    /// </summary>
+    public const string DefaultName = "Default";
+
+    /// <summary>
+    /// Adds an <see cref="IHealthCheckPublisher"/> that sends health report results via SMTP email, registered
+    /// under <see cref="DefaultName"/>.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHealthChecksBuilder"/>.</param>
+    /// <param name="options">An optional action to configure.</param>
+    /// <exception cref="ArgumentNullException">The <paramref name="builder"/> is <see langword="null" />.</exception>
+    public static IHealthChecksBuilder AddEmailPublisher(
+        [NotNull] this IHealthChecksBuilder builder,
+        Action<EmailOptions>? options = null
+    ) => builder.AddEmailPublisher(DefaultName, options);
+
+    /// <summary>
+    /// Adds an <see cref="IHealthCheckPublisher"/> that sends health report results via SMTP email.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHealthChecksBuilder"/>.</param>
+    /// <param name="name">The name of the publisher. Used to resolve its configuration and to allow multiple Email targets.</param>
+    /// <param name="options">An optional action to configure.</param>
+    /// <exception cref="ArgumentNullException">The <paramref name="builder"/> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentNullException">The <paramref name="name"/> is <see langword="null" />.</exception>
+    /// <exception cref="ArgumentException">The <paramref name="name"/> is <see langword="null" /> or <c>whitespace</c>.</exception>
+    /// <exception cref="ArgumentException">The <paramref name="name"/> is already in use.</exception>
+    public static IHealthChecksBuilder AddEmailPublisher(
+        [NotNull] this IHealthChecksBuilder builder,
+        [NotNull] string name,
+        Action<EmailOptions>? options = null
+    )
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        if (
+            builder.Services.Any(descriptor =>
+                descriptor.ServiceType == typeof(EmailPublisherMarker) && Equals(descriptor.ServiceKey, name)
+            )
+        )
+        {
+            throw new ArgumentException($"Name `{name}` already in use.", nameof(name));
+        }
+
+        _ = builder.Services.AddKeyedSingleton<EmailPublisherMarker>(name);
+
+        builder.Services.TryAddSingleton(TimeProvider.System);
+
+        builder.Services.TryAddSingleton<ISmtpSender, MailKitSmtpSender>();
+
+        _ = builder.Services.ConfigureOptions<EmailOptionsConfigure>();
+
+        if (options is not null)
+        {
+            _ = builder.Services.Configure(name, options);
+        }
+
+        _ = builder.Services.AddSingleton<IHealthCheckPublisher>(provider => new EmailHealthCheckPublisher(
+            name,
+            provider.GetRequiredService<ISmtpSender>(),
+            provider.GetRequiredService<IOptionsMonitor<EmailOptions>>(),
+            provider.GetRequiredService<TimeProvider>()
+        ));
+
+        return builder;
+    }
+
+#pragma warning disable S2094 // Classes should not be empty
+    private sealed class EmailPublisherMarker;
+#pragma warning restore S2094
+}

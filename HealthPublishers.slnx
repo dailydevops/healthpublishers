@@ -25,6 +25,7 @@
     <Project Path="src/NetEvolve.HealthPublishers.AWS.CloudWatch/NetEvolve.HealthPublishers.AWS.CloudWatch.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Datadog/NetEvolve.HealthPublishers.Datadog.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Elasticsearch/NetEvolve.HealthPublishers.Elasticsearch.csproj" />
+    <Project Path="src/NetEvolve.HealthPublishers.Email/NetEvolve.HealthPublishers.Email.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.OpenTelemetry/NetEvolve.HealthPublishers.OpenTelemetry.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Opsgenie/NetEvolve.HealthPublishers.Opsgenie.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.PagerDuty/NetEvolve.HealthPublishers.PagerDuty.csproj" />

@@ -1,0 +1,11 @@
+﻿{
+  Subject: [Unhealthy] Health check report - <system-identifier>,
+  Text:
+Health check report Unhealthy in 5ms
+System: <system-identifier>
+Machine: <machine-name>
+
+Entries:
+- self: Unhealthy (5ms) - boom
+
+}
