@@ -1,0 +1,19 @@
+﻿{
+  Color: good,
+  Details:
+- **self**: Healthy (5ms)
+
+,
+  Facts: [
+    {
+      Title: System,
+      Value: integration-tests
+    },
+    {
+      Title: Duration,
+      Value: 5ms
+    }
+  ],
+  Title: Health check report: Healthy,
+  Type: AdaptiveCard
+}

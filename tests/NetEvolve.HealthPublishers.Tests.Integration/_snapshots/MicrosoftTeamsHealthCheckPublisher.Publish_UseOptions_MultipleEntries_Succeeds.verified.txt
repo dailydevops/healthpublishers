@@ -1,0 +1,21 @@
+﻿{
+  Color: warning,
+  Details:
+- **database**: Healthy (3ms)
+
+- **cache**: Degraded (120ms) - slow response
+
+,
+  Facts: [
+    {
+      Title: System,
+      Value: integration-tests
+    },
+    {
+      Title: Duration,
+      Value: 123ms
+    }
+  ],
+  Title: Health check report: Degraded,
+  Type: AdaptiveCard
+}
