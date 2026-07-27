@@ -329,6 +329,111 @@ public sealed class SplunkHealthCheckPublisherTests
         }
     }
 
+    [Test]
+    public async Task AddSplunkPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        _ = services
+            .AddLogging()
+            .AddSingleton<IConfiguration>(new ConfigurationBuilder().Build())
+            .AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddSplunkPublisher(options =>
+            {
+                options.ServerUrl = _container.ServerUrl;
+                options.HecToken = SplunkContainer.HecToken;
+                options.SystemIdentifier = "integration-tests";
+            });
+
+        var handler = new CapturingHttpMessageHandler();
+        _ = services
+            .AddHttpClient(
+                $"{DependencyInjectionExtensions.HttpClientNamePrefix}{DependencyInjectionExtensions.DefaultName}"
+            )
+            .AddHttpMessageHandler(() => handler);
+
+        var provider = services.BuildServiceProvider();
+        var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
+        var healthCheckService = provider.GetRequiredService<HealthCheckService>();
+        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
+            _ = await Assert.That(handler.CapturedRequestBody).IsNotNull();
+        }
+    }
+
+    [Test]
+    public async Task AddSplunkPublisher_WhenMultipleRegisteredViaHealthChecksPipeline_PublishesIndependentRealHealthReports()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        _ = services
+            .AddLogging()
+            .AddSingleton<IConfiguration>(new ConfigurationBuilder().Build())
+            .AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddSplunkPublisher(
+                "Internal",
+                options =>
+                {
+                    options.ServerUrl = _container.ServerUrl;
+                    options.HecToken = SplunkContainer.HecToken;
+                    options.SystemIdentifier = "internal-system";
+                }
+            )
+            .AddSplunkPublisher(
+                "External",
+                options =>
+                {
+                    options.ServerUrl = _container.ServerUrl;
+                    options.HecToken = SplunkContainer.HecToken;
+                    options.SystemIdentifier = "external-system";
+                }
+            );
+
+        var internalHandler = new CapturingHttpMessageHandler();
+        var externalHandler = new CapturingHttpMessageHandler();
+        _ = services
+            .AddHttpClient($"{DependencyInjectionExtensions.HttpClientNamePrefix}Internal")
+            .AddHttpMessageHandler(() => internalHandler);
+        _ = services
+            .AddHttpClient($"{DependencyInjectionExtensions.HttpClientNamePrefix}External")
+            .AddHttpMessageHandler(() => externalHandler);
+
+        var provider = services.BuildServiceProvider();
+        var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
+        var healthCheckService = provider.GetRequiredService<HealthCheckService>();
+        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+
+        // Act
+        foreach (var publisher in publishers)
+        {
+            await publisher.PublishAsync(report, CancellationToken.None);
+        }
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
+            _ = await Assert.That(publishers.Length).IsEqualTo(2);
+            _ = await Assert.That(internalHandler.CapturedRequestBody).IsNotNull();
+            _ = await Assert.That(externalHandler.CapturedRequestBody).IsNotNull();
+            _ = await Assert
+                .That(internalHandler.CapturedRequestBody)
+                .Contains("\"system_identifier\":\"internal-system\"");
+            _ = await Assert
+                .That(externalHandler.CapturedRequestBody)
+                .Contains("\"system_identifier\":\"external-system\"");
+        }
+    }
+
     private static async Task VerifyCapturedRequest(CapturingHttpMessageHandler handler)
     {
         ArgumentNullException.ThrowIfNull(handler.CapturedRequestBody);
