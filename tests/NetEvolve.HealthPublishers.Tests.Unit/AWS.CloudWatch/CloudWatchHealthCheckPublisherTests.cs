@@ -107,7 +107,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         // Assert
         var request = CapturedRequest(mock);
         var expected = timeProvider.GetUtcNow().UtcDateTime;
-        _ = await Assert.That(request.MetricData[0].TimestampUtc).IsEqualTo(expected);
+        _ = await Assert.That(request.MetricData[0].Timestamp).IsEqualTo(expected);
     }
 
     [Test]
@@ -271,19 +271,31 @@ public sealed class CloudWatchHealthCheckPublisherTests
     private static HealthReport EmptyReport() =>
         new(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.FromMilliseconds(42));
 
-    private static Mock<IAmazonCloudWatch> CreateMock()
+    // Never called: IAmazonCloudWatch's static abstract members (from IAmazonService) make TUnit.Mocks'
+    // source generator only emit its Mock<T> extensions for the companion IAmazonCloudWatchMockable type,
+    // but that companion type is itself only generated once this call site is observed.
+#pragma warning disable CS8321
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Design",
+        "S1144:Unused private types or members should be removed",
+        Justification = "Call site required to make the source generator emit IAmazonCloudWatchMockable."
+    )]
+    private static void EnsureCloudWatchMockableIsGenerated() => _ = Mock.Of<IAmazonCloudWatch>();
+#pragma warning restore CS8321
+
+    private static Mock<IAmazonCloudWatchMockable> CreateMock()
     {
-        var mock = Mock.Of<IAmazonCloudWatch>();
+        var mock = Mock.Of<IAmazonCloudWatchMockable>();
         _ = mock.PutMetricDataAsync(Any<PutMetricDataRequest>(), Any<CancellationToken>())
             .Returns(new PutMetricDataResponse());
         return mock;
     }
 
-    private static PutMetricDataRequest CapturedRequest(Mock<IAmazonCloudWatch> mock) =>
+    private static PutMetricDataRequest CapturedRequest(Mock<IAmazonCloudWatchMockable> mock) =>
         (PutMetricDataRequest)Mock.Invocations(mock).Single().Arguments[0]!;
 
     private static CloudWatchHealthCheckPublisher CreatePublisher(
-        Mock<IAmazonCloudWatch> mock,
+        Mock<IAmazonCloudWatchMockable> mock,
         Action<CloudWatchOptions>? configure = null,
         TimeProvider? timeProvider = null
     )
