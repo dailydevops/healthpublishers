@@ -1,0 +1,9 @@
+﻿{
+  Entries: {
+    self: {
+      Status: Healthy
+    }
+  },
+  Status: Healthy,
+  SystemIdentifier: integration-tests
+}

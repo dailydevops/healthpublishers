@@ -1,0 +1,4 @@
+﻿{
+  Status: Healthy,
+  SystemIdentifier: integration-tests
+}

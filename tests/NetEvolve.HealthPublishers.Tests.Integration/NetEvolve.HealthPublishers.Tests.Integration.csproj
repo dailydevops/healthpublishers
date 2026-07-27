@@ -9,6 +9,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetEvolve.Extensions.TUnit" />
     <PackageReference Include="Testcontainers" />
+    <PackageReference Include="Testcontainers.Elasticsearch" />
     <PackageReference Include="Testcontainers.Floci" />
     <PackageReference Include="Testcontainers.Seq" />
     <PackageReference Include="TUnit" />
@@ -19,6 +20,7 @@
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.ApplicationInsights\NetEvolve.HealthPublishers.ApplicationInsights.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.AWS.CloudWatch\NetEvolve.HealthPublishers.AWS.CloudWatch.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Datadog\NetEvolve.HealthPublishers.Datadog.csproj" />
+    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Elasticsearch\NetEvolve.HealthPublishers.Elasticsearch.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.OpenTelemetry\NetEvolve.HealthPublishers.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.Metrics\NetEvolve.HealthPublishers.Prometheus.Metrics.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.PushGateway\NetEvolve.HealthPublishers.Prometheus.PushGateway.csproj" />

@@ -1,0 +1,10 @@
+﻿{
+  Entries: {
+    self: {
+      Description: boom,
+      Status: Unhealthy
+    }
+  },
+  Status: Unhealthy,
+  SystemIdentifier: integration-tests
+}
