@@ -30,6 +30,7 @@ internal static class HealthPublisherArchitecture
             typeof(Prometheus.PushGateway.PrometheusPushGatewayOptions).Assembly,
             typeof(Seq.SeqOptions).Assembly,
             typeof(Splunk.SplunkOptions).Assembly,
+            typeof(Webhook.WebhookOptions).Assembly,
         ];
 
         return new ArchLoader()

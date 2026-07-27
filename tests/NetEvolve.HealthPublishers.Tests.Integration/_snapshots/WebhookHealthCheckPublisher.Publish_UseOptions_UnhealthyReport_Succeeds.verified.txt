@@ -1,0 +1,13 @@
+﻿{
+  Entries: [
+    {
+      Description: boom,
+      DurationMs: 5.0,
+      Name: self,
+      Status: Unhealthy
+    }
+  ],
+  Status: Unhealthy,
+  SystemIdentifier: integration-tests,
+  TotalDurationMs: 5.0
+}
