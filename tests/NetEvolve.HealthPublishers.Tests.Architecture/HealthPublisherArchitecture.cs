@@ -29,6 +29,7 @@ internal static class HealthPublisherArchitecture
             typeof(Prometheus.Metrics.PrometheusMetricsOptions).Assembly,
             typeof(Prometheus.PushGateway.PrometheusPushGatewayOptions).Assembly,
             typeof(Seq.SeqOptions).Assembly,
+            typeof(Slack.SlackOptions).Assembly,
             typeof(Splunk.SplunkOptions).Assembly,
         ];
 

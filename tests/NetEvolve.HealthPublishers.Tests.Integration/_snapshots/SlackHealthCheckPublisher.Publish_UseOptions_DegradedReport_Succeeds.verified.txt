@@ -1,0 +1,11 @@
+﻿{
+  AttachmentText:
+Overall status: Degraded, elapsed 5ms.
+- *self*: Degraded (5ms) - slow,
+  Color: warning,
+  Fields: [
+    System Identifier
+  ],
+  SystemIdentifierValue: integration-tests,
+  Text: Health check report: Degraded
+}

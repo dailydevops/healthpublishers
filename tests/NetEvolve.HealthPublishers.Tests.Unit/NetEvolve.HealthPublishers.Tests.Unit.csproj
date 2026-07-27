@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.Metrics\NetEvolve.HealthPublishers.Prometheus.Metrics.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.PushGateway\NetEvolve.HealthPublishers.Prometheus.PushGateway.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Seq\NetEvolve.HealthPublishers.Seq.csproj" />
+    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Slack\NetEvolve.HealthPublishers.Slack.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Splunk\NetEvolve.HealthPublishers.Splunk.csproj" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,11 @@
+﻿{
+  AttachmentText:
+Overall status: Unhealthy, elapsed 5ms.
+- *self*: Unhealthy (5ms) - boom,
+  Color: danger,
+  Fields: [
+    System Identifier
+  ],
+  SystemIdentifierValue: integration-tests,
+  Text: Health check report: Unhealthy
+}
