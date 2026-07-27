@@ -14,13 +14,13 @@ using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.AWS.CloudWatch;
 using HealthStatus = Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus;
 
-[TestGroup(nameof(CloudWatch))]
-[ClassDataSource<CloudWatchLocalStackContainer>(Shared = SharedType.PerClass)]
+[TestGroup($"{nameof(AWS)}.{nameof(CloudWatch)}")]
+[ClassDataSource<CloudWatchFlociContainer>(Shared = SharedType.PerClass)]
 public sealed class CloudWatchHealthCheckPublisherTests
 {
-    private readonly CloudWatchLocalStackContainer _container;
+    private readonly CloudWatchFlociContainer _container;
 
-    public CloudWatchHealthCheckPublisherTests(CloudWatchLocalStackContainer container) => _container = container;
+    public CloudWatchHealthCheckPublisherTests(CloudWatchFlociContainer container) => _container = container;
 
     [Test]
     public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
@@ -29,10 +29,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
         {
-            options.Region = CloudWatchLocalStackContainer.Region;
+            options.Region = CloudWatchFlociContainer.Region;
             options.ServiceUrl = _container.ServiceUrl;
-            options.AccessKeyId = CloudWatchLocalStackContainer.AccessKeyId;
-            options.SecretAccessKey = CloudWatchLocalStackContainer.SecretAccessKey;
+            options.AccessKeyId = CloudWatchFlociContainer.AccessKeyId;
+            options.SecretAccessKey = CloudWatchFlociContainer.SecretAccessKey;
             options.Namespace = @namespace;
             options.SystemIdentifier = "integration-tests";
         });
@@ -58,10 +58,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
         {
-            options.Region = CloudWatchLocalStackContainer.Region;
+            options.Region = CloudWatchFlociContainer.Region;
             options.ServiceUrl = _container.ServiceUrl;
-            options.AccessKeyId = CloudWatchLocalStackContainer.AccessKeyId;
-            options.SecretAccessKey = CloudWatchLocalStackContainer.SecretAccessKey;
+            options.AccessKeyId = CloudWatchFlociContainer.AccessKeyId;
+            options.SecretAccessKey = CloudWatchFlociContainer.SecretAccessKey;
             options.Namespace = @namespace;
             options.SystemIdentifier = "integration-tests";
         });
@@ -93,10 +93,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
         {
-            options.Region = CloudWatchLocalStackContainer.Region;
+            options.Region = CloudWatchFlociContainer.Region;
             options.ServiceUrl = _container.ServiceUrl;
-            options.AccessKeyId = CloudWatchLocalStackContainer.AccessKeyId;
-            options.SecretAccessKey = CloudWatchLocalStackContainer.SecretAccessKey;
+            options.AccessKeyId = CloudWatchFlociContainer.AccessKeyId;
+            options.SecretAccessKey = CloudWatchFlociContainer.SecretAccessKey;
             options.Namespace = @namespace;
             options.SystemIdentifier = "integration-tests";
         });
@@ -128,10 +128,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
         {
-            options.Region = CloudWatchLocalStackContainer.Region;
+            options.Region = CloudWatchFlociContainer.Region;
             options.ServiceUrl = _container.ServiceUrl;
-            options.AccessKeyId = CloudWatchLocalStackContainer.AccessKeyId;
-            options.SecretAccessKey = CloudWatchLocalStackContainer.SecretAccessKey;
+            options.AccessKeyId = CloudWatchFlociContainer.AccessKeyId;
+            options.SecretAccessKey = CloudWatchFlociContainer.SecretAccessKey;
             options.Namespace = @namespace;
             options.SystemIdentifier = "integration-tests";
         });
@@ -170,13 +170,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var @namespace = CreateNamespace();
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
-            { "HealthPublishers:AWS:CloudWatch:Default:Region", CloudWatchLocalStackContainer.Region },
+            { "HealthPublishers:AWS:CloudWatch:Default:Region", CloudWatchFlociContainer.Region },
             { "HealthPublishers:AWS:CloudWatch:Default:ServiceUrl", _container.ServiceUrl.ToString() },
-            { "HealthPublishers:AWS:CloudWatch:Default:AccessKeyId", CloudWatchLocalStackContainer.AccessKeyId },
-            {
-                "HealthPublishers:AWS:CloudWatch:Default:SecretAccessKey",
-                CloudWatchLocalStackContainer.SecretAccessKey
-            },
+            { "HealthPublishers:AWS:CloudWatch:Default:AccessKeyId", CloudWatchFlociContainer.AccessKeyId },
+            { "HealthPublishers:AWS:CloudWatch:Default:SecretAccessKey", CloudWatchFlociContainer.SecretAccessKey },
             { "HealthPublishers:AWS:CloudWatch:Default:Namespace", @namespace },
             { "HealthPublishers:AWS:CloudWatch:Default:SystemIdentifier", "integration-tests" },
         };
@@ -246,12 +243,77 @@ public sealed class CloudWatchHealthCheckPublisherTests
         }
     }
 
+    [Test]
+    public async Task AddAWSCloudWatchPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport()
+    {
+        // Arrange
+        var @namespace = CreateNamespace();
+        var services = new ServiceCollection();
+        _ = services
+            .AddLogging()
+            .AddSingleton<IConfiguration>(new ConfigurationBuilder().Build())
+            .AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddAWSCloudWatchPublisher(options => ConfigureValidOptions(options, @namespace));
+
+        var provider = services.BuildServiceProvider();
+        var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
+        var healthCheckService = provider.GetRequiredService<HealthCheckService>();
+        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
+            _ = await AssertMetricsPublished(@namespace);
+        }
+    }
+
+    [Test]
+    public async Task AddAWSCloudWatchPublisher_WhenMultipleRegisteredViaHealthChecksPipeline_PublishesIndependentRealHealthReports()
+    {
+        // Arrange
+        var internalNamespace = CreateNamespace();
+        var externalNamespace = CreateNamespace();
+        var services = new ServiceCollection();
+        _ = services
+            .AddLogging()
+            .AddSingleton<IConfiguration>(new ConfigurationBuilder().Build())
+            .AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy())
+            .AddAWSCloudWatchPublisher("Internal", options => ConfigureValidOptions(options, internalNamespace))
+            .AddAWSCloudWatchPublisher("External", options => ConfigureValidOptions(options, externalNamespace));
+
+        var provider = services.BuildServiceProvider();
+        var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
+        var healthCheckService = provider.GetRequiredService<HealthCheckService>();
+        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+
+        // Act
+        foreach (var publisher in publishers)
+        {
+            await publisher.PublishAsync(report, CancellationToken.None);
+        }
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
+            _ = await Assert.That(publishers.Length).IsEqualTo(2);
+            _ = await AssertMetricsPublished(internalNamespace);
+            _ = await AssertMetricsPublished(externalNamespace);
+        }
+    }
+
     private void ConfigureValidOptions(CloudWatchOptions options, string @namespace)
     {
-        options.Region = CloudWatchLocalStackContainer.Region;
+        options.Region = CloudWatchFlociContainer.Region;
         options.ServiceUrl = _container.ServiceUrl;
-        options.AccessKeyId = CloudWatchLocalStackContainer.AccessKeyId;
-        options.SecretAccessKey = CloudWatchLocalStackContainer.SecretAccessKey;
+        options.AccessKeyId = CloudWatchFlociContainer.AccessKeyId;
+        options.SecretAccessKey = CloudWatchFlociContainer.SecretAccessKey;
         options.Namespace = @namespace;
         options.SystemIdentifier = "integration-tests";
     }
@@ -270,10 +332,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         using var client = DependencyInjectionExtensions.CreateClient(
             new CloudWatchOptions
             {
-                Region = CloudWatchLocalStackContainer.Region,
+                Region = CloudWatchFlociContainer.Region,
                 ServiceUrl = _container.ServiceUrl,
-                AccessKeyId = CloudWatchLocalStackContainer.AccessKeyId,
-                SecretAccessKey = CloudWatchLocalStackContainer.SecretAccessKey,
+                AccessKeyId = CloudWatchFlociContainer.AccessKeyId,
+                SecretAccessKey = CloudWatchFlociContainer.SecretAccessKey,
                 Namespace = @namespace,
                 SystemIdentifier = "integration-tests",
             }

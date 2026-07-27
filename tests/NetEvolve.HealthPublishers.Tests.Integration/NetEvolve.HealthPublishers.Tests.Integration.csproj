@@ -9,7 +9,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetEvolve.Extensions.TUnit" />
     <PackageReference Include="Testcontainers" />
-    <PackageReference Include="Testcontainers.LocalStack" />
+    <PackageReference Include="Testcontainers.Floci" />
     <PackageReference Include="Testcontainers.Seq" />
     <PackageReference Include="TUnit" />
     <PackageReference Include="Verify.TUnit" />

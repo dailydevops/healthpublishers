@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.AWS.CloudWatch;
 
-[TestGroup(nameof(CloudWatch))]
+[TestGroup($"{nameof(AWS)}.{nameof(CloudWatch)}")]
 public sealed class CloudWatchOptionsConfigureTests
 {
     [Test]

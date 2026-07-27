@@ -17,7 +17,7 @@ using TUnit.Mocks;
 using static TUnit.Mocks.Arguments.Arg;
 using HealthStatus = Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus;
 
-[TestGroup(nameof(CloudWatch))]
+[TestGroup($"{nameof(AWS)}.{nameof(CloudWatch)}")]
 public sealed class CloudWatchHealthCheckPublisherTests
 {
     private const string TestName = "Test";

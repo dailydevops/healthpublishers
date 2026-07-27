@@ -36,7 +36,7 @@
     <PackageVersion Include="NSubstitute" Version="6.0.0" />
     <PackageVersion Include="NSubstitute.Analyzers.CSharp" Version="1.0.17" />
     <PackageVersion Include="Testcontainers" Version="4.13.0" />
-    <PackageVersion Include="Testcontainers.LocalStack" Version="4.13.0" />
+    <PackageVersion Include="Testcontainers.Floci" Version="4.13.0" />
     <PackageVersion Include="Testcontainers.Seq" Version="4.13.0" />
     <PackageVersion Include="TngTech.ArchUnitNET.TUnit" Version="0.13.3" />
     <PackageVersion Include="TUnit" Version="1.61.38" />
