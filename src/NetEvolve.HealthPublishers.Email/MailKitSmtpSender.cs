@@ -21,8 +21,9 @@ internal sealed class MailKitSmtpSender : ISmtpSender
 
         if (!string.IsNullOrEmpty(options.Username))
         {
+            // EmailOptionsConfigure guarantees Username and Password are either both set or both unset.
             await client
-                .AuthenticateAsync(options.Username, options.Password ?? string.Empty, cancellationToken)
+                .AuthenticateAsync(options.Username, options.Password!, cancellationToken)
                 .ConfigureAwait(false);
         }
 
