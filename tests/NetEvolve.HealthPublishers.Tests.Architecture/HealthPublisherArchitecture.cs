@@ -22,6 +22,7 @@ internal static class HealthPublisherArchitecture
             typeof(Datadog.DatadogOptions).Assembly,
             typeof(Seq.SeqOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
+            typeof(Prometheus.PushGateway.PrometheusPushGatewayOptions).Assembly,
         ];
 
         return new ArchLoader()
