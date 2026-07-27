@@ -1,7 +1,7 @@
 namespace NetEvolve.HealthPublishers.Tests.Unit.ApplicationInsights;
 
+using System.Globalization;
 using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -48,11 +48,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
+        var telemetry = channel.LogRecords.Single();
         using (Assert.Multiple())
         {
-            _ = await Assert.That(telemetry.Success).IsEqualTo(expectedSuccess);
-            _ = await Assert.That(telemetry.Message).IsEqualTo(status.ToString());
+            _ = await Assert.That(telemetry.GetAvailabilityAttribute("success")).IsEqualTo(expectedSuccess.ToString());
+            _ = await Assert.That(telemetry.GetAvailabilityAttribute("message")).IsEqualTo(status.ToString());
         }
     }
 
@@ -76,11 +76,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
+        var telemetry = channel.LogRecords.Single();
         using (Assert.Multiple())
         {
-            _ = await Assert.That(telemetry.Properties["MachineName"]).IsEqualTo(Environment.MachineName);
-            _ = await Assert.That(telemetry.Properties["SystemIdentifier"]).IsEqualTo("checkout-service");
+            _ = await Assert.That(telemetry.GetAttribute("MachineName")).IsEqualTo(Environment.MachineName);
+            _ = await Assert.That(telemetry.GetAttribute("SystemIdentifier")).IsEqualTo("checkout-service");
         }
     }
 
@@ -105,8 +105,13 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
-        _ = await Assert.That(telemetry.Timestamp).IsEqualTo(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
+        var telemetry = channel.LogRecords.Single();
+        var timestamp = DateTimeOffset.Parse(
+            telemetry.GetAvailabilityAttribute("testTimestamp")!,
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal
+        );
+        _ = await Assert.That(timestamp).IsEqualTo(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
     }
 
     [Test]
@@ -132,8 +137,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
-        _ = await Assert.That(telemetry.Duration).IsEqualTo(TimeSpan.FromMilliseconds(123));
+        var telemetry = channel.LogRecords.Single();
+        var duration = TimeSpan.Parse(telemetry.GetAvailabilityAttribute("duration")!, CultureInfo.InvariantCulture);
+        _ = await Assert.That(duration).IsEqualTo(TimeSpan.FromMilliseconds(123));
     }
 
     [Test]
@@ -156,8 +162,8 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
-        _ = await Assert.That(telemetry.RunLocation).IsEqualTo(Environment.MachineName);
+        var telemetry = channel.LogRecords.Single();
+        _ = await Assert.That(telemetry.GetAvailabilityAttribute("runLocation")).IsEqualTo(Environment.MachineName);
     }
 
     [Test]
@@ -180,8 +186,8 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
-        _ = await Assert.That(telemetry.Name).IsEqualTo("HealthReport");
+        var telemetry = channel.LogRecords.Single();
+        _ = await Assert.That(telemetry.GetAvailabilityAttribute("name")).IsEqualTo("HealthReport");
     }
 
     [Test]
@@ -216,12 +222,13 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
+        var telemetry = channel.LogRecords.Single();
+        var entries = telemetry.GetAttribute("Entries");
         using (Assert.Multiple())
         {
-            _ = await Assert.That(telemetry.Properties["Entries"]).Contains("\"self\"");
-            _ = await Assert.That(telemetry.Properties["Entries"]).Contains("\"Status\":\"Healthy\"");
-            _ = await Assert.That(telemetry.Properties["Entries"]).Contains("\"Description\":\"all good\"");
+            _ = await Assert.That(entries).Contains("\"self\"");
+            _ = await Assert.That(entries).Contains("\"Status\":\"Healthy\"");
+            _ = await Assert.That(entries).Contains("\"Description\":\"all good\"");
         }
     }
 
@@ -245,7 +252,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        _ = await Assert.That(channel.FlushAsyncCount).IsEqualTo(1);
+        // The in-memory exporter only receives log records once flushed; without the
+        // publisher awaiting FlushAsync, this collection would still be empty.
+        _ = await Assert.That(channel.LogRecords.Count).IsEqualTo(1);
     }
 
     [Test]
@@ -269,12 +278,16 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        var ids = channel.SentItems.OfType<AvailabilityTelemetry>().Select(telemetry => telemetry.Id).ToList();
+        var ids = channel.LogRecords.Select(record => record.GetAvailabilityAttribute("id")).ToList();
         _ = await Assert.That(ids[0]).IsNotEqualTo(ids[1]);
     }
 
-    private static TelemetryConfiguration CreateTelemetryConfiguration(TestTelemetryChannel channel) =>
-        new() { ConnectionString = TestConnectionString, TelemetryChannel = channel };
+    private static TelemetryConfiguration CreateTelemetryConfiguration(TestTelemetryChannel channel)
+    {
+        var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+        channel.Configure(configuration);
+        return configuration;
+    }
 
     private static IOptionsMonitor<ApplicationInsightsOptions> CreateOptionsMonitor(
         Action<ApplicationInsightsOptions> configure

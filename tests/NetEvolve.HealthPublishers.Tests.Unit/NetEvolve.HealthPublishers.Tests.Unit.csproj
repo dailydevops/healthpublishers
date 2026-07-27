@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetEvolve.Extensions.TUnit" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
     <PackageReference Include="NSubstitute.Analyzers.CSharp">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
