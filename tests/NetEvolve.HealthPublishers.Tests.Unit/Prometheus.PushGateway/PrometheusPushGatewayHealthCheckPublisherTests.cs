@@ -15,7 +15,6 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.PushGateway;
 using TUnit.Mocks;
-using TUnit.Mocks.Http;
 
 [TestGroup($"{nameof(Prometheus)}.{nameof(PushGateway)}")]
 public sealed class PrometheusPushGatewayHealthCheckPublisherTests

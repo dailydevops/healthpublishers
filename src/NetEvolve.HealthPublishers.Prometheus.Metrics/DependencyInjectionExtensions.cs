@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Prometheus.Metrics;
+﻿namespace NetEvolve.HealthPublishers.Prometheus.Metrics;
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -79,15 +79,13 @@ public static class DependencyInjectionExtensions
             _ = builder.Services.Configure(name, options);
         }
 
-        _ = builder.Services.AddKeyedSingleton(name, (_, _) => global::Prometheus.Metrics.NewCustomRegistry());
+        _ = builder.Services.AddKeyedSingleton(name, (_, _) => Metrics.NewCustomRegistry());
 
         _ = builder.Services.AddKeyedSingleton(
             name,
             (provider, key) =>
                 new PrometheusMetricsInstruments(
-                    global::Prometheus.Metrics.WithCustomRegistry(
-                        provider.GetRequiredKeyedService<CollectorRegistry>((string?)key)
-                    )
+                    Metrics.WithCustomRegistry(provider.GetRequiredKeyedService<CollectorRegistry>((string?)key))
                 )
         );
 

@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.Metrics;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.Metrics;
 
 using System;
 using System.Collections.Generic;
@@ -14,7 +14,7 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.Metrics;
 
-[TestGroup(nameof(Metrics))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(Metrics)}")]
 public sealed class PrometheusMetricsHealthCheckPublisherTests
 {
     private const string TestName = "Test";

@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.Metrics;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.Metrics;
 
 using System;
 using System.Linq;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.Metrics;
 
-[TestGroup(nameof(Metrics))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(Metrics)}")]
 public sealed class DependencyInjectionExtensionsTests
 {
     [Test]

@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Prometheus.Metrics;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Prometheus.Metrics;
 
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.Metrics;
 
-[TestGroup(nameof(Metrics))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(Metrics)}")]
 public sealed class PrometheusMetricsHealthCheckPublisherTests
 {
     [Test]

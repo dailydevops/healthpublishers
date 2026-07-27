@@ -1,7 +1,6 @@
-namespace NetEvolve.HealthPublishers.Prometheus.Metrics;
+﻿namespace NetEvolve.HealthPublishers.Prometheus.Metrics;
 
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
