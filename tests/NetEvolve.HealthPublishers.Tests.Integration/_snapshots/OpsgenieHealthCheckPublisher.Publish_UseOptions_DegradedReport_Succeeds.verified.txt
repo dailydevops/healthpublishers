@@ -1,0 +1,14 @@
+﻿{
+  Alias: healthpublishers:integration-tests,
+  Description:
+Overall status: Degraded, elapsed 5ms.
+%%%
+- **self**: Degraded (5ms) - slow
+%%%,
+  Message: Health check report: Degraded,
+  Priority: P3,
+  Tags: [
+    system_identifier:integration-tests,
+    status:Degraded
+  ]
+}

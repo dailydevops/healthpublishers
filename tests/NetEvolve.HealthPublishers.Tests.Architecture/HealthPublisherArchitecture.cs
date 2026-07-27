@@ -24,6 +24,7 @@ internal static class HealthPublisherArchitecture
             typeof(Datadog.DatadogOptions).Assembly,
             typeof(Elasticsearch.ElasticsearchOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
+            typeof(Opsgenie.OpsgenieOptions).Assembly,
             typeof(Prometheus.Metrics.PrometheusMetricsOptions).Assembly,
             typeof(Prometheus.PushGateway.PrometheusPushGatewayOptions).Assembly,
             typeof(Seq.SeqOptions).Assembly,
