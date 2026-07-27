@@ -109,7 +109,7 @@ internal sealed class CloudWatchHealthCheckPublisher : IHealthCheckPublisher
             MetricName = metricName,
             Value = value,
             Unit = unit,
-            TimestampUtc = timestampUtc,
+            Timestamp = timestampUtc,
             Dimensions = dimensions,
         };
 
