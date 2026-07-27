@@ -225,7 +225,7 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public void PublishAsync_WhenResponseIsNotSuccessStatusCode_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenResponseIsNotSuccessStatusCode_ThrowsHttpRequestException()
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
@@ -235,10 +235,18 @@ public sealed class SplunkHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        void Act() => publisher.PublishAsync(report, CancellationToken.None).GetAwaiter().GetResult();
+        HttpRequestException? caught = null;
+        try
+        {
+            await publisher.PublishAsync(report, CancellationToken.None);
+        }
+        catch (HttpRequestException ex)
+        {
+            caught = ex;
+        }
 
         // Assert
-        _ = Assert.Throws<HttpRequestException>(Act);
+        _ = await Assert.That(caught).IsNotNull();
     }
 
     private static IOptionsMonitor<SplunkOptions> CreateOptionsMonitor(Action<SplunkOptions> configure)
