@@ -1,0 +1,13 @@
+﻿{
+  AlertType: warning,
+  Tags: [
+    system_identifier:integration-tests,
+    status:Degraded
+  ],
+  Text:
+Overall status: Degraded, elapsed 5ms.
+%%%
+- **self**: Degraded (5ms) - slow
+%%%,
+  Title: Health check report: Degraded
+}
