@@ -15,6 +15,7 @@
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Datadog\NetEvolve.HealthPublishers.Datadog.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Elasticsearch\NetEvolve.HealthPublishers.Elasticsearch.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Email\NetEvolve.HealthPublishers.Email.csproj" />
+    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.MicrosoftTeams\NetEvolve.HealthPublishers.MicrosoftTeams.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.OpenTelemetry\NetEvolve.HealthPublishers.OpenTelemetry.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Opsgenie\NetEvolve.HealthPublishers.Opsgenie.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.PagerDuty\NetEvolve.HealthPublishers.PagerDuty.csproj" />
