@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Prometheus.PushGateway;
+﻿namespace NetEvolve.HealthPublishers.Prometheus.PushGateway;
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -105,7 +105,7 @@ public static class DependencyInjectionExtensions
         // so a ServerUrl without a trailing slash would otherwise drop part of the configured path.
 #pragma warning disable S1075 // Not a hardcoded endpoint - this normalizes the user-supplied ServerUrl.
         client.BaseAddress =
-            serverUrl is not null && !serverUrl.AbsoluteUri.EndsWith('/')
+            serverUrl?.AbsoluteUri.EndsWith('/') == false
                 ? new Uri(serverUrl.AbsoluteUri + '/', UriKind.Absolute)
                 : serverUrl;
 #pragma warning restore S1075

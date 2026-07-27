@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.PushGateway;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.PushGateway;
 
 using System;
 using System.Linq;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.PushGateway;
 
-[TestGroup(nameof(PushGateway))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(PushGateway)}")]
 public sealed class DependencyInjectionExtensionsTests
 {
     [Test]
@@ -88,6 +88,7 @@ public sealed class DependencyInjectionExtensionsTests
         {
             options.ServerUrl = new Uri("https://pushgateway.example.com");
             options.Job = "checkout-service";
+            options.Instance = "checkout-service";
             options.SystemIdentifier = "checkout-service";
         });
         var provider = services.BuildServiceProvider();
@@ -115,6 +116,7 @@ public sealed class DependencyInjectionExtensionsTests
             {
                 options.ServerUrl = new Uri("https://pushgateway.example.com");
                 options.Job = "checkout-service";
+                options.Instance = "checkout-service-instance";
                 options.SystemIdentifier = "checkout-service";
             }
         );

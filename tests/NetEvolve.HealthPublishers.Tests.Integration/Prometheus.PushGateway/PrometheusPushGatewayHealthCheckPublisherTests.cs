@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Prometheus.PushGateway;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Prometheus.PushGateway;
 
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.PushGateway;
 using NetEvolve.HealthPublishers.Tests.Integration.Internals;
 
-[TestGroup(nameof(PushGateway))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(PushGateway)}")]
 [ClassDataSource<PrometheusPushGatewayMockServer>(Shared = SharedType.PerClass)]
 public sealed class PrometheusPushGatewayHealthCheckPublisherTests
 {

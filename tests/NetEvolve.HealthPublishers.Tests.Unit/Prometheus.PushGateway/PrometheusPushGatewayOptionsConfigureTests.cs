@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.PushGateway;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.PushGateway;
 
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.PushGateway;
 
-[TestGroup(nameof(PushGateway))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(PushGateway)}")]
 public sealed class PrometheusPushGatewayOptionsConfigureTests
 {
     [Test]

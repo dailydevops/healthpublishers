@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.PushGateway;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Prometheus.PushGateway;
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using NetEvolve.HealthPublishers.Prometheus.PushGateway;
 using TUnit.Mocks;
 using TUnit.Mocks.Http;
 
-[TestGroup(nameof(PushGateway))]
+[TestGroup($"{nameof(Prometheus)}.{nameof(PushGateway)}")]
 public sealed class PrometheusPushGatewayHealthCheckPublisherTests
 {
     private const string TestName = "Test";
