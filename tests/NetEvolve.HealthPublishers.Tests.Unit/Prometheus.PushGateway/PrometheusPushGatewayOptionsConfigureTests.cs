@@ -116,6 +116,7 @@ public sealed class PrometheusPushGatewayOptionsConfigureTests
         {
             ServerUrl = new Uri("https://pushgateway.example.com"),
             Job = "checkout-service",
+            Instance = "checkout-service-01",
             SystemIdentifier = "checkout-service",
         };
 
@@ -226,6 +227,7 @@ public sealed class PrometheusPushGatewayOptionsConfigureTests
         {
             ServerUrl = new Uri("https://pushgateway.example.com"),
             Job = "checkout-service",
+            Instance = "checkout-service-01",
             SystemIdentifier = systemIdentifier!,
         };
 
@@ -241,6 +243,33 @@ public sealed class PrometheusPushGatewayOptionsConfigureTests
     }
 
     [Test]
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments(" ")]
+    public async Task Validate_WhenInstanceNullOrWhiteSpace_ReturnFailure(string? instance)
+    {
+        // Arrange
+        var configure = new PrometheusPushGatewayOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = new PrometheusPushGatewayOptions
+        {
+            ServerUrl = new Uri("https://pushgateway.example.com"),
+            Job = "checkout-service",
+            Instance = instance!,
+            SystemIdentifier = "checkout-service",
+        };
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(result.Failed).IsTrue();
+            _ = await Assert.That(result.FailureMessage).IsEqualTo("The Instance must be set.");
+        }
+    }
+
+    [Test]
     public async Task Validate_WhenOptionsValid_ReturnSuccess()
     {
         // Arrange
@@ -249,6 +278,7 @@ public sealed class PrometheusPushGatewayOptionsConfigureTests
         {
             ServerUrl = new Uri("https://pushgateway.example.com"),
             Job = "checkout-service",
+            Instance = "checkout-service-01",
             SystemIdentifier = "checkout-service",
         };
 

@@ -50,6 +50,11 @@ internal sealed class PrometheusPushGatewayOptionsConfigure
             return Fail("The Job must be set.");
         }
 
+        if (string.IsNullOrWhiteSpace(options.Instance))
+        {
+            return Fail("The Instance must be set.");
+        }
+
         if (string.IsNullOrWhiteSpace(options.SystemIdentifier))
         {
             return Fail("The SystemIdentifier must be set.");

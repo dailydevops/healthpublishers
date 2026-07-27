@@ -29,6 +29,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         {
             options.ServerUrl = _server.ServerUrl;
             options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
             options.SystemIdentifier = "integration-tests";
         });
         var report = new HealthReport(
@@ -54,6 +55,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         {
             options.ServerUrl = _server.ServerUrl;
             options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
             options.SystemIdentifier = "integration-tests";
         });
         var report = new HealthReport(
@@ -85,6 +87,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         {
             options.ServerUrl = _server.ServerUrl;
             options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
             options.SystemIdentifier = "integration-tests";
         });
         var report = new HealthReport(
@@ -116,6 +119,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         {
             options.ServerUrl = _server.ServerUrl;
             options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
             options.SystemIdentifier = "integration-tests";
         });
         var report = new HealthReport(
@@ -179,6 +183,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         {
             { "HealthPublishers:Prometheus:PushGateway:Default:ServerUrl", _server.ServerUrl.ToString() },
             { "HealthPublishers:Prometheus:PushGateway:Default:Job", "checkout-service" },
+            { "HealthPublishers:Prometheus:PushGateway:Default:Instance", "checkout-service-01" },
             { "HealthPublishers:Prometheus:PushGateway:Default:SystemIdentifier", "integration-tests" },
         };
         var (publisher, handler) = CreatePublisher(configureConfiguration: config =>
@@ -246,6 +251,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
             {
                 options.ServerUrl = _server.ServerUrl;
                 options.Job = "checkout-service";
+                options.Instance = "checkout-service-01";
                 options.SystemIdentifier = "internal-system";
             }
         );
@@ -255,6 +261,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
             {
                 options.ServerUrl = secondServer.ServerUrl;
                 options.Job = "checkout-service";
+                options.Instance = "checkout-service-01";
                 options.SystemIdentifier = "external-system";
             }
         );

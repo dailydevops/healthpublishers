@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,11 +24,13 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     private static readonly char[] MetricNameTerminators = ['{', ' '];
 
     [Test]
-    public async Task PublishAsync_WhenInstanceNotSet_PostsToJobPathOnly()
+    public async Task PublishAsync_WhenCalled_PutsToJobAndInstancePath()
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -42,18 +45,24 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
 
         // Assert
         var request = factory.Handler.Requests[0];
-        _ = await Assert.That(request.RequestUri!.AbsolutePath).IsEqualTo("/metrics/job/checkout-service");
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(request.Method).IsEqualTo(HttpMethod.Put);
+            _ = await Assert
+                .That(request.RequestUri!.AbsolutePath)
+                .IsEqualTo("/metrics/job/checkout-service/instance/checkout-service-01");
+        }
     }
 
     [Test]
-    public async Task PublishAsync_WhenInstanceSet_PostsToJobAndInstancePath()
+    public async Task PublishAsync_WhenJobAndInstanceContainReservedCharacters_EscapesPathSegments()
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
-            .Handler.OnPost("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Handler.OnPut("/metrics/job/checkout-service/instance/instance%20one")
             .Respond(HttpStatusCode.Accepted);
-        var optionsMonitor = CreateOptionsMonitor(options => options.Instance = "checkout-service-01");
+        var optionsMonitor = CreateOptionsMonitor(options => options.Instance = "instance one");
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
             factory,
@@ -69,21 +78,21 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var request = factory.Handler.Requests[0];
         _ = await Assert
             .That(request.RequestUri!.AbsolutePath)
-            .IsEqualTo("/metrics/job/checkout-service/instance/checkout-service-01");
+            .IsEqualTo("/metrics/job/checkout-service/instance/instance%20one");
     }
 
     [Test]
-    public async Task PublishAsync_WhenJobAndInstanceContainReservedCharacters_EscapesPathSegments()
+    public async Task PublishAsync_WhenJobOrInstanceContainSlash_UsesBase64PathSegment()
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
-            .Handler.OnPost("/metrics/job/checkout%2Fservice/instance/instance%20one")
+            .Handler.OnPut("/metrics/job@base64/Y2hlY2tvdXQvc2VydmljZQ/instance@base64/aW5zdGFuY2Uvb25l")
             .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options =>
         {
             options.Job = "checkout/service";
-            options.Instance = "instance one";
+            options.Instance = "instance/one";
         });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -100,7 +109,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var request = factory.Handler.Requests[0];
         _ = await Assert
             .That(request.RequestUri!.AbsolutePath)
-            .IsEqualTo("/metrics/job/checkout%2Fservice/instance/instance%20one");
+            .IsEqualTo("/metrics/job@base64/Y2hlY2tvdXQvc2VydmljZQ/instance@base64/aW5zdGFuY2Uvb25l");
     }
 
     [Test]
@@ -108,7 +117,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -137,7 +148,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -166,7 +179,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -192,7 +207,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -215,7 +232,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -242,7 +261,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -300,7 +321,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -335,7 +358,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => options.SystemIdentifier = "checkout-service");
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -362,7 +387,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
-        _ = factory.Handler.OnPost("/metrics/job/checkout-service").Respond(HttpStatusCode.Accepted);
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new PrometheusPushGatewayHealthCheckPublisher(
             TestName,
@@ -441,6 +468,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
             {
                 options.ServerUrl = new Uri("https://pushgateway.example.com");
                 options.Job = "checkout-service";
+                options.Instance = "checkout-service-01";
                 options.SystemIdentifier = "test-system";
                 configure(options);
             }

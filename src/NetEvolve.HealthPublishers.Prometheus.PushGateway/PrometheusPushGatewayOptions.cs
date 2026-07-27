@@ -22,13 +22,15 @@ public sealed record PrometheusPushGatewayOptions
     public string Job { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets an optional instance label to further distinguish the source of the pushed metrics.
+    /// Gets or sets an instance label to distinguish the source of the pushed metrics.
     /// </summary>
     /// <remarks>
-    /// Optional. When set, used as the <c>instance</c> path segment of the Pushgateway API,
-    /// e.g. <c>POST /metrics/job/&lt;Job&gt;/instance/&lt;Instance&gt;</c>.
+    /// Required. Used as the <c>instance</c> path segment of the Pushgateway API,
+    /// e.g. <c>PUT /metrics/job/&lt;Job&gt;/instance/&lt;Instance&gt;</c>. Pushgateway groups pushed metrics by the
+    /// full path, so without a distinct instance per publisher, publishers sharing a job would overwrite each
+    /// other's same-named metrics.
     /// </remarks>
-    public string? Instance { get; set; }
+    public string Instance { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a free-form identifier for the system publishing the health report.

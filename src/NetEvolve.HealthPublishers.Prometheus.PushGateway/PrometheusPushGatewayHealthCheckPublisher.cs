@@ -41,7 +41,7 @@ internal sealed class PrometheusPushGatewayHealthCheckPublisher : IHealthCheckPu
         content.Headers.ContentType = MediaTypeHeaderValue.Parse("text/plain; version=0.0.4; charset=utf-8");
 
         using var response = await client
-            .PostAsync(BuildRequestUri(options), content, cancellationToken)
+            .PutAsync(BuildRequestUri(options), content, cancellationToken)
             .ConfigureAwait(false);
 
         _ = response.EnsureSuccessStatusCode();
@@ -51,15 +51,20 @@ internal sealed class PrometheusPushGatewayHealthCheckPublisher : IHealthCheckPu
     // they must not also be emitted as labels in the exposition body.
     internal static Uri BuildRequestUri(PrometheusPushGatewayOptions options)
     {
-        var path = $"metrics/job/{Uri.EscapeDataString(options.Job)}";
-
-        if (!string.IsNullOrWhiteSpace(options.Instance))
-        {
-            path += $"/instance/{Uri.EscapeDataString(options.Instance)}";
-        }
+        var path = $"metrics/{BuildPathSegment("job", options.Job)}/{BuildPathSegment("instance", options.Instance)}";
 
         return new Uri(path, UriKind.Relative);
     }
+
+    // Slashes in a grouping-key value are not escapable via percent-encoding - the Pushgateway router treats them
+    // as path separators regardless. Values containing a slash must instead use the `@base64` path-segment form.
+    private static string BuildPathSegment(string label, string value) =>
+        value.Contains('/', StringComparison.Ordinal)
+            ? $"{label}@base64/{Base64UrlEncode(value)}"
+            : $"{label}/{Uri.EscapeDataString(value)}";
+
+    private static string Base64UrlEncode(string value) =>
+        Convert.ToBase64String(Encoding.UTF8.GetBytes(value)).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 
     // Maps HealthStatus to a numeric gauge value. HealthStatus is ordinal: Unhealthy = 0, Degraded = 1, Healthy = 2.
     private static int MapStatus(HealthStatus status) => (int)status;

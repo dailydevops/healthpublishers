@@ -10,7 +10,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 
 /// <summary>
-/// Extensions methods for <see cref="IHealthChecksBuilder"/> to add the Prometheus Pushgateway health check publisher.
+/// Extension methods for <see cref="IHealthChecksBuilder"/> to add the Prometheus Pushgateway health check publisher.
 /// </summary>
 public static class DependencyInjectionExtensions
 {
@@ -45,7 +45,7 @@ public static class DependencyInjectionExtensions
     /// <param name="options">An optional action to configure.</param>
     /// <exception cref="ArgumentNullException">The <paramref name="builder"/> is <see langword="null" />.</exception>
     /// <exception cref="ArgumentNullException">The <paramref name="name"/> is <see langword="null" />.</exception>
-    /// <exception cref="ArgumentException">The <paramref name="name"/> is <see langword="null" /> or <c>whitespace</c>.</exception>
+    /// <exception cref="ArgumentException">The <paramref name="name"/> is <c>whitespace</c>.</exception>
     /// <exception cref="ArgumentException">The <paramref name="name"/> is already in use.</exception>
     public static IHealthChecksBuilder AddPrometheusPushGateway(
         [NotNull] this IHealthChecksBuilder builder,
@@ -94,11 +94,22 @@ public static class DependencyInjectionExtensions
         return builder;
     }
 
-    internal static void ConfigureHttpClient(string name, IServiceProvider provider, HttpClient client) =>
-        client.BaseAddress = provider
+    internal static void ConfigureHttpClient(string name, IServiceProvider provider, HttpClient client)
+    {
+        var serverUrl = provider
             .GetRequiredService<IOptionsMonitor<PrometheusPushGatewayOptions>>()
             .Get(name)
             .ServerUrl;
+
+        // HttpClient resolves relative request URIs against BaseAddress by replacing the last path segment,
+        // so a ServerUrl without a trailing slash would otherwise drop part of the configured path.
+#pragma warning disable S1075 // Not a hardcoded endpoint - this normalizes the user-supplied ServerUrl.
+        client.BaseAddress =
+            serverUrl is not null && !serverUrl.AbsoluteUri.EndsWith('/')
+                ? new Uri(serverUrl.AbsoluteUri + '/', UriKind.Absolute)
+                : serverUrl;
+#pragma warning restore S1075
+    }
 
 #pragma warning disable S2094 // Classes should not be empty
     private sealed class PrometheusPushGatewayPublisherMarker;

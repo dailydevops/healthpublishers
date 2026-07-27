@@ -4,13 +4,15 @@
 [![NuGet Downloads](https://img.shields.io/nuget/dt/NetEvolve.HealthPublishers.Prometheus.PushGateway.svg)](https://www.nuget.org/packages/NetEvolve.HealthPublishers.Prometheus.PushGateway/)
 [![License](https://img.shields.io/github/license/dailydevops/healthpublishers.svg)](https://github.com/dailydevops/healthpublishers/blob/main/LICENSE)
 
-An `IHealthCheckPublisher` implementation that pushes `HealthReport` results to a [Prometheus Pushgateway](https://github.com/prometheus/pushgateway) instance, using the text exposition format directly over HTTP (`POST /metrics/job/<job>[/instance/<instance>]`).
+An `IHealthCheckPublisher` implementation that pushes `HealthReport` results to a [Prometheus Pushgateway](https://github.com/prometheus/pushgateway) instance, using the text exposition format directly over HTTP (`PUT /metrics/job/<job>/instance/<instance>`). `PUT` fully replaces the metric group on every publish, so checks that are removed or renamed don't leave stale series behind.
 
 ## Features
 
 - Pushes a full set of gauge metrics per publish: overall report status, report duration, last publish timestamp, and per-check status and duration
 - Maps `HealthStatus` to a numeric gauge value using the enum's own ordinal (`Unhealthy` → `0`, `Degraded` → `1`, `Healthy` → `2`)
 - Labels every metric with the machine name and a required, free-form `SystemIdentifier` to tell instances apart
+- Requires a distinct `Instance` per publisher so Pushgateway groups each publisher's metrics under its own path, instead of publishers sharing a `Job` overwriting each other's same-named metrics
+- `Job` and `Instance` values containing a `/` are sent using Pushgateway's `@base64` grouping-key syntax, since percent-encoding a slash does not stop Pushgateway from treating it as a path separator
 - Configuration- or builder-based setup, consistent with the `NetEvolve.HealthChecks.*` conventions
 - Named registrations to publish to multiple Pushgateway targets side by side
 - No `prometheus-net` client dependency - just `HttpClient` via `IHttpClientFactory`
@@ -46,6 +48,7 @@ builder.AddPrometheusPushGateway(options =>
 {
     options.ServerUrl = new Uri("https://pushgateway.example.com");
     options.Job = "checkout-service";
+    options.Instance = "checkout-service-01";
     options.SystemIdentifier = "checkout-service";
 });
 ```
@@ -63,7 +66,7 @@ builder.AddPrometheusPushGateway(options =>
 {
     options.ServerUrl = new Uri("https://pushgateway.example.com"); // Required
     options.Job = "checkout-service"; // Required, used as the `job` path segment
-    options.Instance = "checkout-service-01"; // Optional, used as the `instance` path segment
+    options.Instance = "checkout-service-01"; // Required, used as the `instance` path segment
     options.SystemIdentifier = "checkout-service"; // Required, labels every metric alongside the machine name
 });
 ```
@@ -79,12 +82,14 @@ builder.AddPrometheusPushGateway("Internal", options =>
 {
     options.ServerUrl = new Uri("https://pushgateway-internal.example.com");
     options.Job = "checkout-service";
+    options.Instance = "checkout-service-01";
     options.SystemIdentifier = "checkout-service";
 });
 builder.AddPrometheusPushGateway("External", options =>
 {
     options.ServerUrl = new Uri("https://pushgateway-external.example.com");
     options.Job = "checkout-service";
+    options.Instance = "checkout-service-01";
     options.SystemIdentifier = "checkout-service";
 });
 ```
@@ -98,7 +103,7 @@ builder.AddPrometheusPushGateway(options =>
 {
     options.ServerUrl = new Uri("https://pushgateway.example.com"); // Required
     options.Job = "checkout-service"; // Required
-    options.Instance = "checkout-service-01"; // Optional
+    options.Instance = "checkout-service-01"; // Required
     options.SystemIdentifier = "checkout-service"; // Required
 });
 ```
