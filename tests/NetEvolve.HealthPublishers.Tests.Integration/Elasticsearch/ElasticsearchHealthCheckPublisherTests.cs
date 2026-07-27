@@ -231,6 +231,9 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     public async Task AddElasticsearchPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
     {
         // Arrange
+        await using var secondContainer = new ElasticsearchContainer();
+        await secondContainer.InitializeAsync();
+
         var internalIndex = CreateIndexName();
         var externalIndex = CreateIndexName();
         var services = new ServiceCollection();
@@ -252,7 +255,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
             "External",
             options =>
             {
-                options.ServerUri = _container.ServerUri;
+                options.ServerUri = secondContainer.ServerUri;
                 options.Username = ElasticsearchContainer.Username;
                 options.Password = ElasticsearchContainer.Password;
                 options.IndexName = externalIndex;
@@ -276,8 +279,8 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         }
 
         // Assert
-        var internalDocument = await FetchDocument(internalIndex);
-        var externalDocument = await FetchDocument(externalIndex);
+        var internalDocument = await FetchDocument(_container.ServerUri, internalIndex);
+        var externalDocument = await FetchDocument(secondContainer.ServerUri, externalIndex);
         using (Assert.Multiple())
         {
             _ = await Assert.That(publishers.Length).IsEqualTo(2);
@@ -293,7 +296,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
 
     private async Task VerifyIndexedDocument(string indexName)
     {
-        var document = await FetchDocument(indexName);
+        var document = await FetchDocument(_container.ServerUri, indexName);
 
         using (Assert.Multiple())
         {
@@ -304,12 +307,12 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         _ = await Verify(Normalize(document)).IgnoreParametersForVerified();
     }
 
-    private async Task<ElasticsearchHealthDocument> FetchDocument(string indexName)
+    private static async Task<ElasticsearchHealthDocument> FetchDocument(Uri serverUri, string indexName)
     {
         var client = DependencyInjectionExtensions.CreateClient(
             new ElasticsearchOptions
             {
-                ServerUri = _container.ServerUri,
+                ServerUri = serverUri,
                 Username = ElasticsearchContainer.Username,
                 Password = ElasticsearchContainer.Password,
                 IndexName = indexName,
