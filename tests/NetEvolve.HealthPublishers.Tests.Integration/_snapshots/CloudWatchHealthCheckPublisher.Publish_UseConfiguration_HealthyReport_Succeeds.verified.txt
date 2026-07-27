@@ -1,0 +1,16 @@
+﻿[
+  {
+    DimensionNames: [
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: Duration
+  },
+  {
+    DimensionNames: [
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: OverallStatus
+  }
+]

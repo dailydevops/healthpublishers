@@ -1,0 +1,48 @@
+﻿[
+  {
+    DimensionNames: [
+      CheckName,
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: CheckDuration
+  },
+  {
+    DimensionNames: [
+      CheckName,
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: CheckDuration
+  },
+  {
+    DimensionNames: [
+      CheckName,
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: CheckStatus
+  },
+  {
+    DimensionNames: [
+      CheckName,
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: CheckStatus
+  },
+  {
+    DimensionNames: [
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: Duration
+  },
+  {
+    DimensionNames: [
+      MachineName,
+      SystemIdentifier
+    ],
+    MetricName: OverallStatus
+  }
+]

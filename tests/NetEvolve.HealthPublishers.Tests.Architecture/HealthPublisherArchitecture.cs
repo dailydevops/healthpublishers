@@ -20,6 +20,7 @@ internal static class HealthPublisherArchitecture
         System.Reflection.Assembly[] assemblies =
         [
             typeof(ApplicationInsights.ApplicationInsightsOptions).Assembly,
+            typeof(AWS.CloudWatch.CloudWatchOptions).Assembly,
             typeof(Datadog.DatadogOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
             typeof(Prometheus.Metrics.PrometheusMetricsOptions).Assembly,
