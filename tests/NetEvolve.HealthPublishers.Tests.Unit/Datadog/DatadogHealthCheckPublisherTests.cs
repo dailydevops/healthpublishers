@@ -151,7 +151,114 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportTextExceedsMaxLength_TruncatesTextTo4000CharsAndKeepsClosingMarker()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryTextWithoutMarkers()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
+        _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new DatadogHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            TimeSpan.FromMilliseconds(42)
+        );
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        var request = factory.Handler.Requests[0];
+        using var document = JsonDocument.Parse(request.Body!);
+        var text = document.RootElement.GetProperty("text").GetString();
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(text).IsEqualTo("Overall status: Healthy, elapsed 42ms.");
+            _ = await Assert.That(text).DoesNotContain("%%%");
+        }
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
+        _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new DatadogHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5), null, null),
+            },
+            TimeSpan.FromMilliseconds(5)
+        );
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        var request = factory.Handler.Requests[0];
+        using var document = JsonDocument.Parse(request.Body!);
+        var text = document.RootElement.GetProperty("text").GetString();
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(text).Contains("- **self**: Healthy (5ms)");
+            _ = await Assert.That(text).DoesNotContain("**self**: Healthy (5ms) -");
+        }
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLineWithinMarkers()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
+        _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new DatadogHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["database"] = new HealthReportEntry(
+                    HealthStatus.Healthy,
+                    null,
+                    TimeSpan.FromMilliseconds(3),
+                    null,
+                    null
+                ),
+                ["cache"] = new HealthReportEntry(
+                    HealthStatus.Degraded,
+                    "slow response",
+                    TimeSpan.FromMilliseconds(120),
+                    null,
+                    null
+                ),
+            },
+            TimeSpan.FromMilliseconds(123)
+        );
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        var request = factory.Handler.Requests[0];
+        using var document = JsonDocument.Parse(request.Body!);
+        var text = document.RootElement.GetProperty("text").GetString();
+        using (Assert.Multiple())
+        {
+            _ = await Assert
+                .That(text!.StartsWith("Overall status: Degraded, elapsed 123ms.", StringComparison.Ordinal))
+                .IsTrue();
+            _ = await Assert.That(text).Contains("- **database**: Healthy (3ms)");
+            _ = await Assert.That(text).Contains("- **cache**: Degraded (120ms) - slow response");
+            _ = await Assert
+                .That(text.IndexOf("database", StringComparison.Ordinal))
+                .IsLessThan(text.IndexOf("cache", StringComparison.Ordinal));
+            _ = await Assert.That(text.EndsWith("%%%", StringComparison.Ordinal)).IsTrue();
+        }
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenReportTextExceedsMaxLength_DropsWholeOverflowingEntriesAndKeepsClosingMarker()
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
@@ -180,8 +287,12 @@ public sealed class DatadogHealthCheckPublisherTests
         var text = document.RootElement.GetProperty("text").GetString();
         using (Assert.Multiple())
         {
-            _ = await Assert.That(text!.Length).IsEqualTo(4000);
+            _ = await Assert.That(text!.Length).IsLessThanOrEqualTo(4000);
             _ = await Assert.That(text).EndsWith("%%%");
+            // No half-written entry immediately before the closing marker.
+            _ = await Assert.That(text.EndsWith(Environment.NewLine + "%%%", StringComparison.Ordinal)).IsTrue();
+            // Every included entry line kept its full 100-char description, none were cut mid-word.
+            _ = await Assert.That(text).DoesNotContain(new string('x', 99) + "%%%");
         }
     }
 

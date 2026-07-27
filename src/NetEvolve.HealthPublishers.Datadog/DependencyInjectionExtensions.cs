@@ -22,7 +22,7 @@ public static class DependencyInjectionExtensions
     /// <summary>
     /// The default Datadog events intake API address, used when <see cref="DatadogOptions.ApiUrl"/> is not set.
     /// </summary>
-    internal static readonly Uri DefaultApiUrl = new("https://api.datadoghq.com");
+    internal static readonly Uri DefaultApiUrl = new("https://api.datadoghq.com", UriKind.Absolute);
 
     /// <summary>
     /// The prefix used for the named <see cref="IHttpClientFactory"/> client of a Datadog publisher.

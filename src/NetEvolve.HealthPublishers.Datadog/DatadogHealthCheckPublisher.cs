@@ -85,31 +85,25 @@ internal sealed class DatadogHealthCheckPublisher : IHealthCheckPublisher
             .Append(", elapsed ")
             .Append(report.TotalDuration.TotalMilliseconds)
             .AppendLine("ms.")
-            .AppendLine("%%%");
+            .AppendLine(ClosingMarker);
+
+        var maxContentLength = MaxTextLength - ClosingMarker.Length;
 
         foreach (var entry in report.Entries)
         {
-            _ = builder
-                .Append("- **")
-                .Append(entry.Key)
-                .Append("**: ")
-                .Append(entry.Value.Status)
-                .Append(" (")
-                .Append(entry.Value.Duration.TotalMilliseconds)
-                .Append("ms)");
+            var description = string.IsNullOrWhiteSpace(entry.Value.Description)
+                ? string.Empty
+                : $" - {entry.Value.Description}";
+            var line =
+                $"- **{entry.Key}**: {entry.Value.Status} ({entry.Value.Duration.TotalMilliseconds}ms){description}{Environment.NewLine}";
 
-            if (!string.IsNullOrWhiteSpace(entry.Value.Description))
+            // Drop whole entries that would overflow the limit, rather than cutting one in half.
+            if (builder.Length + line.Length > maxContentLength)
             {
-                _ = builder.Append(" - ").Append(entry.Value.Description);
+                break;
             }
 
-            _ = builder.AppendLine();
-        }
-
-        var maxContentLength = MaxTextLength - ClosingMarker.Length;
-        if (builder.Length > maxContentLength)
-        {
-            builder.Length = maxContentLength;
+            _ = builder.Append(line);
         }
 
         return builder.Append(ClosingMarker).ToString();
