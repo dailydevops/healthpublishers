@@ -1,6 +1,7 @@
 namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
 
-using Microsoft.ApplicationInsights.DataContracts;
+using System.Globalization;
+using global::OpenTelemetry.Logs;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -216,28 +217,28 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
             }
         );
 
-#pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
         var internalChannel = new TestTelemetryChannel();
         var externalChannel = new TestTelemetryChannel();
-#pragma warning restore CA2000
+#pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
         _ = services.AddKeyedSingleton(
             "Internal",
             (_, _) =>
-                new TelemetryConfiguration
-                {
-                    ConnectionString = TestConnectionString,
-                    TelemetryChannel = internalChannel,
-                }
+            {
+                var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+                internalChannel.Configure(configuration);
+                return configuration;
+            }
         );
         _ = services.AddKeyedSingleton(
             "External",
             (_, _) =>
-                new TelemetryConfiguration
-                {
-                    ConnectionString = TestConnectionString,
-                    TelemetryChannel = externalChannel,
-                }
+            {
+                var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+                externalChannel.Configure(configuration);
+                return configuration;
+            }
         );
+#pragma warning restore CA2000
 
         var provider = services.BuildServiceProvider();
         var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
@@ -258,10 +259,10 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         {
             _ = await Assert.That(publishers.Length).IsEqualTo(2);
             _ = await Assert
-                .That(internalChannel.SentItems.OfType<AvailabilityTelemetry>().Single().Properties["SystemIdentifier"])
+                .That(internalChannel.LogRecords.Single().GetAttribute("SystemIdentifier"))
                 .IsEqualTo("internal-system");
             _ = await Assert
-                .That(externalChannel.SentItems.OfType<AvailabilityTelemetry>().Single().Properties["SystemIdentifier"])
+                .That(externalChannel.LogRecords.Single().GetAttribute("SystemIdentifier"))
                 .IsEqualTo("external-system");
         }
     }
@@ -282,13 +283,18 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
                 options.SystemIdentifier = "integration-tests";
             });
 
-#pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
         var channel = new TestTelemetryChannel();
-#pragma warning restore CA2000
+#pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
         _ = services.AddKeyedSingleton(
             DependencyInjectionExtensions.DefaultName,
-            (_, _) => new TelemetryConfiguration { ConnectionString = TestConnectionString, TelemetryChannel = channel }
+            (_, _) =>
+            {
+                var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+                channel.Configure(configuration);
+                return configuration;
+            }
         );
+#pragma warning restore CA2000
 
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
@@ -302,34 +308,34 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         using (Assert.Multiple())
         {
             _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
-            var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
-            _ = await Assert.That(telemetry.Success).IsTrue();
+            var telemetry = channel.LogRecords.Single();
+            _ = await Assert.That(telemetry.GetAvailabilityAttribute("success")).IsEqualTo(bool.TrueString);
         }
     }
 
     private static async Task VerifyCapturedTelemetry(TestTelemetryChannel channel)
     {
-        var telemetry = channel.SentItems.OfType<AvailabilityTelemetry>().Single();
+        var telemetry = channel.LogRecords.Single();
 
         using (Assert.Multiple())
         {
-            _ = await Assert.That(telemetry.RunLocation).IsEqualTo(Environment.MachineName);
-            _ = await Assert.That(telemetry.Properties["MachineName"]).IsEqualTo(Environment.MachineName);
+            _ = await Assert.That(telemetry.GetAvailabilityAttribute("runLocation")).IsEqualTo(Environment.MachineName);
+            _ = await Assert.That(telemetry.GetAttribute("MachineName")).IsEqualTo(Environment.MachineName);
         }
 
         _ = await Verify(Normalize(telemetry)).IgnoreParametersForVerified();
     }
 
-    private static object Normalize(AvailabilityTelemetry telemetry) =>
+    private static object Normalize(LogRecord telemetry) =>
         new
         {
-            telemetry.Name,
-            telemetry.Duration,
-            telemetry.Success,
-            telemetry.Message,
-            SystemIdentifier = telemetry.Properties["SystemIdentifier"],
+            Duration = TimeSpan.Parse(telemetry.GetAvailabilityAttribute("duration")!, CultureInfo.InvariantCulture),
             // MachineName is excluded: it varies per environment and would break the snapshot elsewhere.
-            Entries = telemetry.Properties.TryGetValue("Entries", out var entries) ? entries : null,
+            Entries = telemetry.GetAttribute("Entries"),
+            Message = telemetry.GetAvailabilityAttribute("message"),
+            Name = telemetry.GetAvailabilityAttribute("name"),
+            Success = bool.Parse(telemetry.GetAvailabilityAttribute("success")!),
+            SystemIdentifier = telemetry.GetAttribute("SystemIdentifier"),
         };
 
     private static (IHealthCheckPublisher Publisher, TestTelemetryChannel Channel) CreatePublisher(
@@ -346,13 +352,18 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
 
         _ = builder.AddApplicationInsightsPublisher(options);
 
-#pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
         var channel = new TestTelemetryChannel();
-#pragma warning restore CA2000
+#pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
         _ = services.AddKeyedSingleton(
             DependencyInjectionExtensions.DefaultName,
-            (_, _) => new TelemetryConfiguration { ConnectionString = TestConnectionString, TelemetryChannel = channel }
+            (_, _) =>
+            {
+                var telemetryConfiguration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+                channel.Configure(telemetryConfiguration);
+                return telemetryConfiguration;
+            }
         );
+#pragma warning restore CA2000
 
         var provider = services.BuildServiceProvider();
 

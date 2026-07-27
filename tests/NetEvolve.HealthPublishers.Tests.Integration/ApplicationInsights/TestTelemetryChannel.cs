@@ -1,20 +1,27 @@
 namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
 
-using Microsoft.ApplicationInsights.Channel;
+using global::OpenTelemetry;
+using global::OpenTelemetry.Logs;
+using Microsoft.ApplicationInsights.Extensibility;
 
-internal sealed class TestTelemetryChannel : ITelemetryChannel, IAsyncFlushable
+// Application Insights 3.x removed the ITelemetryChannel abstraction; telemetry is now
+// exported via the OpenTelemetry pipeline, so tests capture it through an in-memory
+// log exporter instead of a fake channel.
+internal sealed class TestTelemetryChannel
 {
-    public List<ITelemetry> SentItems { get; } = [];
+    public List<LogRecord> LogRecords { get; } = [];
 
-    public bool? DeveloperMode { get; set; }
+    public void Configure(TelemetryConfiguration configuration) =>
+        configuration.ConfigureOpenTelemetryBuilder(builder =>
+            builder.WithLogging(logging => logging.AddInMemoryExporter(LogRecords))
+        );
+}
 
-    public string EndpointAddress { get; set; } = string.Empty;
+internal static class LogRecordExtensions
+{
+    public static string? GetAvailabilityAttribute(this LogRecord record, string name) =>
+        record.GetAttribute($"microsoft.availability.{name}");
 
-    public void Dispose() { }
-
-    public void Flush() { }
-
-    public Task<bool> FlushAsync(CancellationToken cancellationToken) => Task.FromResult(true);
-
-    public void Send(ITelemetry item) => SentItems.Add(item);
+    public static string? GetAttribute(this LogRecord record, string key) =>
+        record.Attributes?.FirstOrDefault(attribute => attribute.Key == key).Value?.ToString();
 }
