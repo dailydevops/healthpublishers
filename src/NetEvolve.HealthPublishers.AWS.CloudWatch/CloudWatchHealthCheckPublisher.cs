@@ -86,10 +86,15 @@ internal sealed class CloudWatchHealthCheckPublisher : IHealthCheckPublisher
             );
         }
 
-        var request = new PutMetricDataRequest { Namespace = options.Namespace, MetricData = metricData };
+        const int maxDatumsPerRequest = 20;
 
-        _ = await _client.PutMetricDataAsync(request, cancellationToken).ConfigureAwait(false);
-    }
+        for (var i = 0; i < metricData.Count; i += maxDatumsPerRequest)
+        {
+            var batch = metricData.GetRange(i, Math.Min(maxDatumsPerRequest, metricData.Count - i));
+            var request = new PutMetricDataRequest { Namespace = options.Namespace, MetricData = batch };
+
+            _ = await _client.PutMetricDataAsync(request, cancellationToken).ConfigureAwait(false);
+        }
 
     private static MetricDatum CreateMetric(
         string metricName,
