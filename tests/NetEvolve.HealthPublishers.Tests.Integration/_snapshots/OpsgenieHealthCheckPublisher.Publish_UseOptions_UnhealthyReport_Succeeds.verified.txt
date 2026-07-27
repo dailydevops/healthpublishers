@@ -1,0 +1,14 @@
+﻿{
+  Alias: healthpublishers:integration-tests,
+  Description:
+Overall status: Unhealthy, elapsed 5ms.
+%%%
+- **self**: Unhealthy (5ms) - boom
+%%%,
+  Message: Health check report: Unhealthy,
+  Priority: P1,
+  Tags: [
+    system_identifier:integration-tests,
+    status:Unhealthy
+  ]
+}

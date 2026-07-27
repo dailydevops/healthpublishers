@@ -1,0 +1,15 @@
+﻿{
+  Alias: healthpublishers:integration-tests,
+  Description:
+Overall status: Degraded, elapsed 123ms.
+%%%
+- **database**: Healthy (3ms)
+- **cache**: Degraded (120ms) - slow response
+%%%,
+  Message: Health check report: Degraded,
+  Priority: P3,
+  Tags: [
+    system_identifier:integration-tests,
+    status:Degraded
+  ]
+}
