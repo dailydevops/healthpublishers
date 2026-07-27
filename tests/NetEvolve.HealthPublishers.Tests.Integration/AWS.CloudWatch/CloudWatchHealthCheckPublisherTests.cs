@@ -362,20 +362,21 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     private static object[] Normalize(IEnumerable<Metric> metrics) =>
-        metrics
-            .Select(metric => new
-            {
-                metric.MetricName,
-                // Dimension values (e.g. MachineName) vary per environment; only their presence is asserted.
-                DimensionNames = metric
-                    .Dimensions.Select(dimension => dimension.Name)
-                    .OrderBy(name => name, StringComparer.Ordinal)
-                    .ToArray(),
-            })
-            .OrderBy(metric => metric.MetricName, StringComparer.Ordinal)
-            .ThenBy(metric => string.Join(',', metric.DimensionNames), StringComparer.Ordinal)
-            .Select(metric => (object)metric)
-            .ToArray();
+        [
+            .. metrics
+                .Select(metric => new
+                {
+                    metric.MetricName,
+                    // Dimension values (e.g. MachineName) vary per environment; only their presence is asserted.
+                    DimensionNames = metric
+                        .Dimensions.Select(dimension => dimension.Name)
+                        .OrderBy(name => name, StringComparer.Ordinal)
+                        .ToArray(),
+                })
+                .OrderBy(metric => metric.MetricName, StringComparer.Ordinal)
+                .ThenBy(metric => string.Join(',', metric.DimensionNames), StringComparer.Ordinal)
+                .Cast<object>(),
+        ];
 
     private static IHealthCheckPublisher CreatePublisher(
         Action<CloudWatchOptions>? options = null,

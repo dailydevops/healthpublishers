@@ -95,6 +95,7 @@ internal sealed class CloudWatchHealthCheckPublisher : IHealthCheckPublisher
 
             _ = await _client.PutMetricDataAsync(request, cancellationToken).ConfigureAwait(false);
         }
+    }
 
     private static MetricDatum CreateMetric(
         string metricName,
