@@ -1,0 +1,8 @@
+﻿{
+  Duration: 00:00:00.0050000,
+  Entries: {"self":{"Status":"Degraded","Description":"slow","ElapsedMilliseconds":5,"Tags":[]}},
+  Message: Degraded,
+  Name: HealthReport,
+  Success: false,
+  SystemIdentifier: integration-tests
+}

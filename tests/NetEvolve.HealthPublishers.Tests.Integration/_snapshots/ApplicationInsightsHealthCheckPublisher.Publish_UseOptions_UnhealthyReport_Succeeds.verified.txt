@@ -1,0 +1,8 @@
+﻿{
+  Duration: 00:00:00.0050000,
+  Entries: {"self":{"Status":"Unhealthy","Description":"boom","ElapsedMilliseconds":5,"Tags":[]}},
+  Message: Unhealthy,
+  Name: HealthReport,
+  Success: false,
+  SystemIdentifier: integration-tests
+}

@@ -32,7 +32,11 @@ internal sealed class ApplicationInsightsHealthCheckPublisher : IHealthCheckPubl
 
         var availability = new AvailabilityTelemetry
         {
-            Id = Guid.NewGuid().ToString(),
+#if NET9_0_OR_GREATER
+            Id = Guid.CreateVersion7().ToString("N"),
+#else
+            Id = Guid.NewGuid().ToString("N"),
+#endif
             Name = "HealthReport",
             Timestamp = _timeProvider.GetUtcNow(),
             Duration = report.TotalDuration,

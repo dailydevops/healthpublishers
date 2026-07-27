@@ -1,0 +1,8 @@
+﻿{
+  Duration: 00:00:00.0050000,
+  Entries: {},
+  Message: Healthy,
+  Name: HealthReport,
+  Success: true,
+  SystemIdentifier: integration-tests
+}

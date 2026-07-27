@@ -1,0 +1,8 @@
+﻿{
+  Duration: 00:00:00.1230000,
+  Entries: {"database":{"Status":"Healthy","Description":null,"ElapsedMilliseconds":3,"Tags":["db","sql"]},"cache":{"Status":"Degraded","Description":"slow response","ElapsedMilliseconds":120,"Tags":["cache"]}},
+  Message: Degraded,
+  Name: HealthReport,
+  Success: false,
+  SystemIdentifier: integration-tests
+}
