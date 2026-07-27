@@ -16,6 +16,10 @@ internal sealed class CapturingHttpMessageHandler : DelegatingHandler
 
     public HttpRequestHeaders? CapturedRequestHeaders { get; private set; }
 
+    public Uri? CapturedRequestUri { get; private set; }
+
+    public HttpMethod? CapturedRequestMethod { get; private set; }
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken
@@ -25,6 +29,8 @@ internal sealed class CapturingHttpMessageHandler : DelegatingHandler
             ? null
             : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         CapturedRequestHeaders = request.Headers;
+        CapturedRequestUri = request.RequestUri;
+        CapturedRequestMethod = request.Method;
 
         return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
     }

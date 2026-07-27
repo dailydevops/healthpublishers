@@ -1,0 +1,6 @@
+﻿{
+  Body: {},
+  Method: POST,
+  Path: /v2/alerts/healthpublishers%3Aintegration-tests/close,
+  Query: ?identifierType=alias
+}

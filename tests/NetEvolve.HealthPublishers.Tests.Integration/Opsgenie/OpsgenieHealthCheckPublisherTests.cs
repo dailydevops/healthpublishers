@@ -43,7 +43,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        _ = await Assert.That(handler.CapturedRequestBody).IsEqualTo("{}");
+        await VerifyCapturedCloseRequest(handler);
     }
 
     [Test]
@@ -203,7 +203,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        _ = await Assert.That(handler.CapturedRequestBody).IsEqualTo("{}");
+        await VerifyCapturedCloseRequest(handler);
     }
 
     [Test]
@@ -314,6 +314,22 @@ public sealed class OpsgenieHealthCheckPublisherTests
                 .That(externalHandler.CapturedRequestBody)
                 .Contains("\"system_identifier:external-system\"");
         }
+    }
+
+    private static async Task VerifyCapturedCloseRequest(CapturingHttpMessageHandler handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler.CapturedRequestUri);
+
+        _ = await Verify(
+                new
+                {
+                    Method = handler.CapturedRequestMethod?.Method,
+                    Path = handler.CapturedRequestUri.AbsolutePath,
+                    Query = handler.CapturedRequestUri.Query,
+                    Body = handler.CapturedRequestBody,
+                }
+            )
+            .IgnoreParametersForVerified();
     }
 
     private static async Task VerifyCapturedRequest(CapturingHttpMessageHandler handler)

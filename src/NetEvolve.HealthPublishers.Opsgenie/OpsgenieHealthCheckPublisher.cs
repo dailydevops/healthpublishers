@@ -120,14 +120,15 @@ internal sealed class OpsgenieHealthCheckPublisher : IHealthCheckPublisher
     {
         if (report.Entries.Count == 0)
         {
-            return $"Overall status: {report.Status}, elapsed {report.TotalDuration.TotalMilliseconds:0.##}ms.";
+            var elapsed = report.TotalDuration.TotalMilliseconds.ToString("0.##", CultureInfo.InvariantCulture);
+            return $"Overall status: {report.Status}, elapsed {elapsed}ms.";
         }
 
         var builder = new StringBuilder(capacity: 256)
             .Append("Overall status: ")
             .Append(report.Status)
             .Append(", elapsed ")
-            .Append(report.TotalDuration.TotalMilliseconds)
+            .Append(report.TotalDuration.TotalMilliseconds.ToString("0.##", CultureInfo.InvariantCulture))
             .AppendLine("ms.")
             .AppendLine(ClosingMarker);
 
@@ -138,8 +139,8 @@ internal sealed class OpsgenieHealthCheckPublisher : IHealthCheckPublisher
             var description = string.IsNullOrWhiteSpace(entry.Value.Description)
                 ? string.Empty
                 : $" - {entry.Value.Description}";
-            var line =
-                $"- **{entry.Key}**: {entry.Value.Status} ({entry.Value.Duration.TotalMilliseconds}ms){description}{Environment.NewLine}";
+            var duration = entry.Value.Duration.TotalMilliseconds.ToString("0.##", CultureInfo.InvariantCulture);
+            var line = $"- **{entry.Key}**: {entry.Value.Status} ({duration}ms){description}{Environment.NewLine}";
 
             // Drop whole entries that would overflow the limit, rather than cutting one in half.
             if (builder.Length + line.Length > maxContentLength)
