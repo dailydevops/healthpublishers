@@ -1,0 +1,7 @@
+﻿{
+  Entries: {
+    self: Healthy
+  },
+  Status: Healthy,
+  SystemIdentifier: external-system
+}

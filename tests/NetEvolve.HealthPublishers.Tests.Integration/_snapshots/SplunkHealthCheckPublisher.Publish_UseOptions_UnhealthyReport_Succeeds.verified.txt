@@ -1,0 +1,13 @@
+﻿{
+  ElapsedMilliseconds: 5.0,
+  Entries: {
+    self: {
+      Description: boom,
+      ElapsedMilliseconds: 5.0,
+      Status: Unhealthy
+    }
+  },
+  Message: Health check report Unhealthy in 5ms,
+  Status: Unhealthy,
+  SystemIdentifier: integration-tests
+}
