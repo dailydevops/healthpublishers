@@ -1,0 +1,7 @@
+﻿{
+  CustomDetails: {"overall_status":"Degraded","total_duration_ms":123,"entries":{"database":{"status":"Healthy","duration_ms":3,"description":null},"cache":{"status":"Degraded","duration_ms":120,"description":"slow response"}}},
+  DedupKey: healthpublishers:integration-tests,
+  EventAction: trigger,
+  Severity: warning,
+  Summary: Health check report: Degraded
+}
