@@ -13,7 +13,6 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Datadog;
 using TUnit.Mocks;
-using TUnit.Mocks.Http;
 
 [TestGroup(nameof(Datadog))]
 public sealed class DatadogHealthCheckPublisherTests

@@ -12,7 +12,6 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Seq;
 using TUnit.Mocks;
-using TUnit.Mocks.Http;
 
 [TestGroup(nameof(Seq))]
 public sealed class SeqHealthCheckPublisherTests

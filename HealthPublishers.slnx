@@ -23,6 +23,7 @@
     <Project Path="src/NetEvolve.HealthPublishers.Abstractions/NetEvolve.HealthPublishers.Abstractions.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Datadog/NetEvolve.HealthPublishers.Datadog.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.OpenTelemetry/NetEvolve.HealthPublishers.OpenTelemetry.csproj" />
+    <Project Path="src/NetEvolve.HealthPublishers.Prometheus.Metrics/NetEvolve.HealthPublishers.Prometheus.Metrics.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Prometheus.PushGateway/NetEvolve.HealthPublishers.Prometheus.PushGateway.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Seq/NetEvolve.HealthPublishers.Seq.csproj" />
   </Folder>
