@@ -49,7 +49,7 @@ internal sealed class ElasticsearchHealthCheckPublisher : IHealthCheckPublisher
         };
 
         var response = await _client
-            .IndexAsync(document, (IndexName)options.IndexName, cancellationToken)
+            .IndexAsync(document, request => request.Index((IndexName)options.IndexName), cancellationToken)
             .ConfigureAwait(false);
 
         if (!response.IsValidResponse)
