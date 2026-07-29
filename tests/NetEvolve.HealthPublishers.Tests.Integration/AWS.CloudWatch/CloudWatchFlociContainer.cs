@@ -12,7 +12,7 @@ using TUnit.Core.Interfaces;
 public sealed class CloudWatchFlociContainer : IAsyncInitializer, IAsyncDisposable
 {
     private const string Image = /*dockerimage*/
-        "floci/floci:1.5.33-compat";
+        "floci/floci:1.5.34";
 
     /// <summary>
     /// Dummy access key id accepted by Floci; no real AWS account is involved.
