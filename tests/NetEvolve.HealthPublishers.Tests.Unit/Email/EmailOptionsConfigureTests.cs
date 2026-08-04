@@ -377,6 +377,88 @@ public sealed class EmailOptionsConfigureTests
     }
 
     [Test]
+    [Arguments(0)]
+    [Arguments(1)]
+    [Arguments(4)]
+    public async Task Validate_WhenRecoveryConfirmationDelayBelowMinimum_ReturnFailure(int minutes)
+    {
+        // Arrange
+        var configure = new EmailOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = CreateValidOptions();
+        options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(minutes);
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(result.Failed).IsTrue();
+            _ = await Assert
+                .That(result.FailureMessage)
+                .IsEqualTo("The RecoveryConfirmationDelay must be at least 5 minutes.");
+        }
+    }
+
+    [Test]
+    public async Task Validate_WhenRecoveryConfirmationDelayAtMinimum_ReturnSuccess()
+    {
+        // Arrange
+        var configure = new EmailOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = CreateValidOptions();
+        options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5);
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        _ = await Assert.That(result).IsEqualTo(ValidateOptionsResult.Success);
+    }
+
+    [Test]
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments(" ")]
+    [Arguments("Not/AZone")]
+    public async Task Validate_WhenTimeZoneIdInvalid_ReturnFailure(string? timeZoneId)
+    {
+        // Arrange
+        var configure = new EmailOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = CreateValidOptions();
+        options.TimeZoneId = timeZoneId!;
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(result.Failed).IsTrue();
+            _ = await Assert
+                .That(result.FailureMessage)
+                .IsEqualTo("The TimeZoneId must be a valid time zone identifier.");
+        }
+    }
+
+    [Test]
+    [Arguments("Europe/Berlin")]
+    [Arguments("UTC")]
+    [Arguments("America/New_York")]
+    public async Task Validate_WhenTimeZoneIdValid_ReturnSuccess(string timeZoneId)
+    {
+        // Arrange
+        var configure = new EmailOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = CreateValidOptions();
+        options.TimeZoneId = timeZoneId;
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        _ = await Assert.That(result).IsEqualTo(ValidateOptionsResult.Success);
+    }
+
+    [Test]
     public async Task Validate_WhenOptionsValid_ReturnSuccess()
     {
         // Arrange

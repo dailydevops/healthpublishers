@@ -1,7 +1,9 @@
 namespace NetEvolve.HealthPublishers.Email;
 
+using System;
 using System.Collections.Generic;
 using MailKit.Security;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 /// <summary>
 /// Represents configuration options for the Email health check publisher.
@@ -76,4 +78,23 @@ public sealed record EmailOptions
     /// useful to distinguish reports coming from the same machine across multiple applications or instances.
     /// </remarks>
     public string SystemIdentifier { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the minimum duration an improved <see cref="HealthStatus"/> must be sustained before a
+    /// recovery email is sent.
+    /// </summary>
+    /// <remarks>
+    /// Optional. Defaults to <c>5</c> minutes. Worsening statuses are always sent immediately and are not
+    /// affected by this option. An enforced minimum of <c>5</c> minutes applies.
+    /// </remarks>
+    public TimeSpan RecoveryConfirmationDelay { get; set; } = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Gets or sets the time zone the timestamp included in the email body is converted to.
+    /// </summary>
+    /// <remarks>
+    /// Optional. Defaults to <c>Europe/Berlin</c>. Must be a valid identifier resolvable via
+    /// <see cref="TimeZoneInfo.FindSystemTimeZoneById(string)"/>.
+    /// </remarks>
+    public string TimeZoneId { get; set; } = "Europe/Berlin";
 }

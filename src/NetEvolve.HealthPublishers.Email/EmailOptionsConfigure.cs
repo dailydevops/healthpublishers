@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Email;
+﻿namespace NetEvolve.HealthPublishers.Email;
 
 using System;
 using System.Linq;
@@ -76,9 +76,41 @@ internal sealed class EmailOptionsConfigure : IConfigureNamedOptions<EmailOption
             return Fail("The Username and Password must both be set or both be unset.");
         }
 
+        if (options.RecoveryConfirmationDelay < TimeSpan.FromMinutes(5))
+        {
+            return Fail("The RecoveryConfirmationDelay must be at least 5 minutes.");
+        }
+
+        if (!IsValidTimeZoneId(options.TimeZoneId))
+        {
+            return Fail("The TimeZoneId must be a valid time zone identifier.");
+        }
+
         return Success;
     }
 
     private static bool IsValidEmailAddress(string address) =>
         MailboxAddress.TryParse(address, out var mailbox) && mailbox.Address.Contains('@', StringComparison.Ordinal);
+
+    private static bool IsValidTimeZoneId(string timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            return false;
+        }
+
+        try
+        {
+            _ = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            return true;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return false;
+        }
+        catch (InvalidTimeZoneException)
+        {
+            return false;
+        }
+    }
 }

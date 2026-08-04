@@ -14,6 +14,8 @@ An `IHealthCheckPublisher` implementation that sends `HealthReport` results as a
 - Supports connecting without authentication, or with username/password credentials, over plain, `StartTls`, or implicit TLS/SSL connections
 - Configuration- or builder-based setup, consistent with the `NetEvolve.HealthPublishers.*` conventions
 - Named registrations to send to multiple SMTP servers or recipient lists side by side
+- Debounces notifications instead of emailing on every publish: a worsening status is emailed immediately, while an improving status must stay sustained for a configurable delay before a "recovery" email is sent
+- Includes a timestamp in the email body, converted to a configurable time zone (defaults to `Europe/Berlin`)
 
 ## Installation
 
@@ -73,6 +75,20 @@ builder.AddEmailPublisher(options =>
 });
 ```
 
+### Notification Behavior
+
+The publisher keeps track of the `HealthStatus` it last actually emailed about (per registered instance) and does not
+send an email for every `PublishAsync` call:
+
+- **Same status as last notified**: no email is sent.
+- **Worsening status** (e.g. `Healthy` → `Degraded`, `Degraded` → `Unhealthy`, or `Healthy` → `Unhealthy`): an email
+  is sent immediately, regardless of `RecoveryConfirmationDelay`.
+- **Improving status** (e.g. `Degraded` → `Healthy`, `Unhealthy` → `Degraded`, or `Unhealthy` → `Healthy`): the
+  improvement must be sustained for at least `RecoveryConfirmationDelay` before a "recovery" email is sent. If the
+  status regresses back to the last-notified status before the delay elapses, no email is sent and the delay resets;
+  a later improvement starts a new delay from scratch. If the status regresses to something worse than the
+  last-notified status instead, that is treated as a new worsening event and is emailed immediately.
+
 ### Advanced Example
 
 Register multiple named Email targets, each sending the same health reports to a different SMTP server or recipient list:
@@ -113,6 +129,8 @@ builder.AddEmailPublisher(options =>
     options.SystemIdentifier = "checkout-service"; // Required
     options.Username = "smtp-user"; // Optional
     options.Password = "<password>"; // Optional
+    options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(10); // Optional, defaults to 5 minutes, minimum 5 minutes
+    options.TimeZoneId = "Europe/Berlin"; // Optional, defaults to "Europe/Berlin"
 });
 ```
 
@@ -134,7 +152,9 @@ builder.AddEmailPublisher(); // reads the "Default" section below
         "To": ["ops-team@example.com"],
         "SystemIdentifier": "checkout-service",
         "Username": "smtp-user",
-        "Password": "<password>"
+        "Password": "<password>",
+        "RecoveryConfirmationDelay": "00:10:00",
+        "TimeZoneId": "Europe/Berlin"
       }
     }
   }

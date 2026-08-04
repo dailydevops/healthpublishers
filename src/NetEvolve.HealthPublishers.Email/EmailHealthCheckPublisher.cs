@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Email;
+﻿namespace NetEvolve.HealthPublishers.Email;
 
 using System;
 using System.Globalization;
@@ -15,6 +15,10 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
     private readonly ISmtpSender _sender;
     private readonly IOptionsMonitor<EmailOptions> _options;
     private readonly TimeProvider _timeProvider;
+    private readonly object _notificationLock = new();
+
+    private HealthStatus _lastNotifiedStatus = HealthStatus.Healthy;
+    private DateTimeOffset? _pendingSince;
 
     public EmailHealthCheckPublisher(
         string name,
@@ -33,6 +37,11 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
     {
         var options = _options.Get(_name);
 
+        if (!ShouldNotify(report.Status, options.RecoveryConfirmationDelay))
+        {
+            return;
+        }
+
 #pragma warning disable CA2000 // The message only wraps a plain-text body (no streams/attachments), so there is
         // nothing unmanaged to release; the ISmtpSender implementation owns sending it and disposing it early would
         // break senders that need to (re-)read the message after it was handed off.
@@ -42,9 +51,56 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
         await _sender.SendAsync(options, message, cancellationToken).ConfigureAwait(false);
     }
 
+    private bool ShouldNotify(HealthStatus newStatus, TimeSpan recoveryConfirmationDelay)
+    {
+        lock (_notificationLock)
+        {
+            var newSeverity = Severity(newStatus);
+            var lastSeverity = Severity(_lastNotifiedStatus);
+
+            if (newSeverity == lastSeverity)
+            {
+                // Status matches the last-notified status: cancel any pending recovery confirmation.
+                _pendingSince = null;
+                return false;
+            }
+
+            if (newSeverity > lastSeverity)
+            {
+                // Worsening: notify immediately and clear any pending recovery confirmation.
+                _lastNotifiedStatus = newStatus;
+                _pendingSince = null;
+                return true;
+            }
+
+            // Improvement: only notify once sustained for at least the configured delay.
+            var now = _timeProvider.GetUtcNow();
+
+            _pendingSince ??= now;
+
+            if (now - _pendingSince.Value < recoveryConfirmationDelay)
+            {
+                return false;
+            }
+
+            _lastNotifiedStatus = newStatus;
+            _pendingSince = null;
+            return true;
+        }
+    }
+
+    private static int Severity(HealthStatus status) =>
+        status switch
+        {
+            HealthStatus.Healthy => 0,
+            HealthStatus.Degraded => 1,
+            _ => 2,
+        };
+
     private MimeMessage BuildMessage(HealthReport report, EmailOptions options)
     {
-        var message = new MimeMessage { Date = _timeProvider.GetUtcNow() };
+        var now = _timeProvider.GetUtcNow();
+        var message = new MimeMessage { Date = now };
 
         message.From.Add(MailboxAddress.Parse(options.From));
 
@@ -58,12 +114,12 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
             $"[{report.Status}] Health check report - {options.SystemIdentifier}"
         );
 
-        message.Body = new TextPart("plain") { Text = BuildBody(report, options) };
+        message.Body = new TextPart("plain") { Text = BuildBody(report, options, now) };
 
         return message;
     }
 
-    private static string BuildBody(HealthReport report, EmailOptions options)
+    private static string BuildBody(HealthReport report, EmailOptions options, DateTimeOffset now)
     {
         var builder = new StringBuilder();
 
@@ -72,6 +128,9 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
                 CultureInfo.InvariantCulture,
                 $"Health check report {report.Status} in {report.TotalDuration.TotalMilliseconds:0.##}ms"
             )
+        );
+        _ = builder.AppendLine(
+            string.Create(CultureInfo.InvariantCulture, $"Timestamp: {FormatTimestamp(now, options.TimeZoneId)}")
         );
         _ = builder.AppendLine(string.Create(CultureInfo.InvariantCulture, $"System: {options.SystemIdentifier}"));
         _ = builder.AppendLine(string.Create(CultureInfo.InvariantCulture, $"Machine: {Environment.MachineName}"));
@@ -92,6 +151,14 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
         }
 
         return builder.ToString();
+    }
+
+    private static string FormatTimestamp(DateTimeOffset now, string timeZoneId)
+    {
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        var converted = TimeZoneInfo.ConvertTime(now, timeZone);
+
+        return string.Create(CultureInfo.InvariantCulture, $"{converted:yyyy-MM-dd HH:mm:ss zzz} ({timeZoneId})");
     }
 
     private static string FormatDescription(HealthReportEntry entry) =>

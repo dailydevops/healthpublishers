@@ -19,9 +19,9 @@ using TUnit.Mocks;
 public sealed class EmailHealthCheckPublisherTests
 {
     private const string TestName = "Test";
+    private static readonly DateTimeOffset TestStart = new(2026, 1, 2, 3, 4, 5, TimeSpan.Zero);
 
     [Test]
-    [Arguments(HealthStatus.Healthy)]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
     public async Task PublishAsync_WhenReportHasStatus_SendsMessageWithStatusInSubject(HealthStatus status)
@@ -54,6 +54,22 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
+    public async Task PublishAsync_WhenFreshPublisherReceivesHealthyReport_DoesNotSend()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Never);
+    }
+
+    [Test]
     public async Task PublishAsync_WhenCalled_SetsFromAndToAddresses()
     {
         // Arrange
@@ -67,7 +83,11 @@ public sealed class EmailHealthCheckPublisherTests
             options.To = ["recipient-a@example.com", "recipient-b@example.com"];
         });
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
-        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Degraded,
+            TimeSpan.Zero
+        );
 
         // Act
         await publisher.PublishAsync(report, CancellationToken.None);
@@ -96,7 +116,11 @@ public sealed class EmailHealthCheckPublisherTests
             .Callback((EmailOptions _, MimeMessage message, CancellationToken _) => captured = message);
         var optionsMonitor = CreateOptionsMonitor(options => options.SystemIdentifier = "checkout-service");
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
-        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.Zero
+        );
 
         // Act
         await publisher.PublishAsync(report, CancellationToken.None);
@@ -111,6 +135,56 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
+    public async Task PublishAsync_WhenTimeZoneIdNotConfigured_IncludesTimestampInBerlinTimeZoneByDefault()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        MimeMessage? captured = null;
+        _ = mock.SendAsync(Any(), Any(), Any())
+            .Callback((EmailOptions _, MimeMessage message, CancellationToken _) => captured = message);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Degraded,
+            TimeSpan.Zero
+        );
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert - TestStart is 2026-01-02T03:04:05Z; Europe/Berlin is CET (UTC+1) in January, no DST.
+        var body = GetTextBody(captured!);
+        _ = await Assert.That(body).Contains("Timestamp: 2026-01-02 04:04:05 +01:00 (Europe/Berlin)");
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenTimeZoneIdConfigured_ConvertsTimestampToThatZone()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        MimeMessage? captured = null;
+        _ = mock.SendAsync(Any(), Any(), Any())
+            .Callback((EmailOptions _, MimeMessage message, CancellationToken _) => captured = message);
+        var optionsMonitor = CreateOptionsMonitor(options => options.TimeZoneId = "America/New_York");
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Degraded,
+            TimeSpan.Zero
+        );
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert - TestStart is 2026-01-02T03:04:05Z; America/New_York is EST (UTC-5) in January, no DST.
+        var body = GetTextBody(captured!);
+        _ = await Assert.That(body).Contains("Timestamp: 2026-01-01 22:04:05 -05:00 (America/New_York)");
+    }
+
+    [Test]
     public async Task PublishAsync_WhenCalled_UsesTimeProviderForDate()
     {
         // Arrange
@@ -119,9 +193,13 @@ public sealed class EmailHealthCheckPublisherTests
         _ = mock.SendAsync(Any(), Any(), Any())
             .Callback((EmailOptions _, MimeMessage message, CancellationToken _) => captured = message);
         var optionsMonitor = CreateOptionsMonitor(options => { });
-        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
+        var timeProvider = new FakeTimeProvider(TestStart);
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
-        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Degraded,
+            TimeSpan.Zero
+        );
 
         // Act
         await publisher.PublishAsync(report, CancellationToken.None);
@@ -138,15 +216,26 @@ public sealed class EmailHealthCheckPublisherTests
         MimeMessage? captured = null;
         _ = mock.SendAsync(Any(), Any(), Any())
             .Callback((EmailOptions _, MimeMessage message, CancellationToken _) => captured = message);
-        var optionsMonitor = CreateOptionsMonitor(options => { });
-        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+        var baselineReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.Zero
+        );
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
             TimeSpan.FromMilliseconds(42)
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(baselineReport, CancellationToken.None); // moves baseline off Healthy
+        await publisher.PublishAsync(report, CancellationToken.None); // starts the recovery-confirmation timer
+        timeProvider.Advance(TimeSpan.FromMinutes(5));
+        await publisher.PublishAsync(report, CancellationToken.None); // pending window elapsed, now sends
 
         // Assert
         var body = GetTextBody(captured!);
@@ -201,8 +290,16 @@ public sealed class EmailHealthCheckPublisherTests
         MimeMessage? captured = null;
         _ = mock.SendAsync(Any(), Any(), Any())
             .Callback((EmailOptions _, MimeMessage message, CancellationToken _) => captured = message);
-        var optionsMonitor = CreateOptionsMonitor(options => { });
-        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+        var baselineReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.Zero
+        );
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
@@ -212,7 +309,10 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(baselineReport, CancellationToken.None); // moves baseline off Healthy
+        await publisher.PublishAsync(report, CancellationToken.None); // starts the recovery-confirmation timer
+        timeProvider.Advance(TimeSpan.FromMinutes(5));
+        await publisher.PublishAsync(report, CancellationToken.None); // pending window elapsed, now sends
 
         // Assert
         var body = GetTextBody(captured!);
@@ -227,7 +327,11 @@ public sealed class EmailHealthCheckPublisherTests
         _ = mock.SendAsync(Any(), Any(), Any()).Throws<SocketException>();
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
-        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.Zero
+        );
 
         // Act
         SocketException? caught = null;
@@ -256,7 +360,11 @@ public sealed class EmailHealthCheckPublisherTests
             options.Password = "wrong-password";
         });
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
-        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.Zero
+        );
 
         // Act
         AuthenticationException? caught = null;
@@ -272,6 +380,171 @@ public sealed class EmailHealthCheckPublisherTests
         // Assert
         _ = await Assert.That(caught).IsNotNull();
     }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusWorsensFromHealthyToDegraded_SendsImmediately()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+        var report = CreateReport(HealthStatus.Degraded);
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusWorsensFromHealthyToUnhealthy_SendsImmediately()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+        var report = CreateReport(HealthStatus.Unhealthy);
+
+        // Act
+        await publisher.PublishAsync(report, CancellationToken.None);
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusWorsensAgainFromDegradedToUnhealthy_SendsImmediately()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None);
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None);
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Exactly(2));
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenImprovementNotYetSustained_DoesNotSend()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
+        timeProvider.Advance(TimeSpan.FromMinutes(4));
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // improvement, not yet due
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenImprovementSustainedForExactlyTheDelay_Sends()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // improvement, starts timer
+        timeProvider.Advance(TimeSpan.FromMinutes(5));
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // pending window elapsed, sends
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Exactly(2));
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenRegressingBackToLastNotifiedStatus_CancelsPendingAndRestartsTimer()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // improvement, starts timer
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // matches last-notified, cancels pending
+        timeProvider.Advance(TimeSpan.FromMinutes(10)); // well past the delay
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // fresh pending timer starting now, not due yet
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenFluctuatingBetweenImprovedStatuses_DoesNotResetPendingTimer()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // improvement, timer starts at t0
+        timeProvider.Advance(TimeSpan.FromMinutes(1));
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // still an improvement, timer origin unchanged
+        timeProvider.Advance(TimeSpan.FromMinutes(4)); // total elapsed from t0 is now exactly the delay
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // sends, proving the timer origin stayed at t0
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Exactly(2));
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusMatchesLastNotifiedStatus_DoesNotSendAgain()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+        );
+        var timeProvider = new FakeTimeProvider(TestStart);
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // matches last-notified, no-op
+
+        // Assert
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
+    }
+
+    private static HealthReport CreateReport(HealthStatus status) =>
+        new(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), status, TimeSpan.Zero);
 
     private static string GetTextBody(MimeMessage message) => ((TextPart)message.Body!).Text ?? string.Empty;
 

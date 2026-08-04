@@ -1,13 +1,15 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Email;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Email;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Email;
 
@@ -29,9 +31,9 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
     public void Dispose() => _api.Dispose();
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_FreshPublisherHealthyReport_DoesNotSend()
     {
-        // Arrange
+        // Arrange - a fresh publisher's baseline is Healthy, so a first Healthy report is a no-op, not a send.
         var systemIdentifier = CreateSystemIdentifier();
         var publisher = CreatePublisher(options =>
         {
@@ -53,7 +55,8 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         await publisher.PublishAsync(report, CancellationToken.None);
 
         // Assert
-        await VerifySentMessage(systemIdentifier);
+        var count = await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None);
+        _ = await Assert.That(count).IsEqualTo(0);
     }
 
     [Test]
@@ -168,7 +171,7 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_UnhealthyReport_Succeeds()
     {
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
@@ -184,8 +187,10 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
             { "HealthPublishers:Email:Default:SystemIdentifier", systemIdentifier },
         };
         var publisher = CreatePublisher(configureConfiguration: config => config.AddInMemoryCollection(values));
+        // A fresh publisher's baseline is Healthy, so the report must be a worsening to send immediately.
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
             TimeSpan.FromMilliseconds(5)
         );
 
@@ -211,8 +216,10 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
             options.Username = "integration-tests";
             options.Password = "integration-tests";
         });
+        // A fresh publisher's baseline is Healthy, so the report must be a worsening to send immediately.
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
             TimeSpan.FromMilliseconds(5)
         );
 
@@ -221,6 +228,51 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
 
         // Assert
         await VerifySentMessage(systemIdentifier);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusImprovesAfterWorsening_WaitsForRecoveryConfirmationDelayBeforeSending()
+    {
+        // Arrange
+        var systemIdentifier = CreateSystemIdentifier();
+        var timeProvider = new FakeTimeProvider();
+        var delay = TimeSpan.FromMinutes(5);
+        var publisher = CreatePublisher(
+            options =>
+            {
+                options.Host = _container.SmtpHost;
+                options.Port = _container.SmtpPortMapped;
+                options.From = "health-checks@example.com";
+                options.To = ["ops-team@example.com"];
+                options.SystemIdentifier = systemIdentifier;
+                options.RecoveryConfirmationDelay = delay;
+            },
+            timeProvider: timeProvider
+        );
+        var unhealthyReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.FromMilliseconds(5)
+        );
+        var healthyReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Healthy,
+            TimeSpan.FromMilliseconds(5)
+        );
+
+        // Act & Assert - the worsening sends immediately.
+        await publisher.PublishAsync(unhealthyReport, CancellationToken.None);
+        _ = await Assert.That(await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None)).IsEqualTo(1);
+
+        // The subsequent improvement does not send right away - it only starts the recovery-confirmation timer.
+        await publisher.PublishAsync(healthyReport, CancellationToken.None);
+        _ = await Assert.That(await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None)).IsEqualTo(1);
+
+        // Once the configured delay has elapsed, the still-improved status is finally reported.
+        timeProvider.Advance(delay);
+        await publisher.PublishAsync(healthyReport, CancellationToken.None);
+        var count = await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None);
+        _ = await Assert.That(count).IsEqualTo(2);
     }
 
     [Test]
@@ -296,8 +348,10 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         var provider = services.BuildServiceProvider();
         var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
 
+        // A fresh publisher's baseline is Healthy, so the report must be a worsening to send immediately.
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
             TimeSpan.FromMilliseconds(5)
         );
 
@@ -339,14 +393,22 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         new
         {
             Subject = message.Subject.Replace(systemIdentifier, "<system-identifier>", StringComparison.Ordinal),
-            Text = message
-                .Text.Replace(systemIdentifier, "<system-identifier>", StringComparison.Ordinal)
+            Text = Regex
+                .Replace(
+                    message.Text,
+                    "Timestamp: .*",
+                    "Timestamp: <timestamp>",
+                    RegexOptions.None,
+                    TimeSpan.FromSeconds(1)
+                )
+                .Replace(systemIdentifier, "<system-identifier>", StringComparison.Ordinal)
                 .Replace(Environment.MachineName, "<machine-name>", StringComparison.Ordinal),
         };
 
     private static IHealthCheckPublisher CreatePublisher(
         Action<EmailOptions>? options = null,
-        Action<IConfigurationBuilder>? configureConfiguration = null
+        Action<IConfigurationBuilder>? configureConfiguration = null,
+        TimeProvider? timeProvider = null
     )
     {
         var configurationBuilder = new ConfigurationBuilder();
@@ -355,6 +417,13 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
 
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
+
+        // AddEmailPublisher only registers TimeProvider.System via TryAddSingleton, so registering one upfront lets
+        // tests control time (e.g. to assert the RecoveryConfirmationDelay behavior without a real wait).
+        if (timeProvider is not null)
+        {
+            _ = services.AddSingleton(timeProvider);
+        }
 
         _ = builder.AddEmailPublisher(options);
 

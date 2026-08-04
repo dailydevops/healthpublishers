@@ -19,24 +19,20 @@ internal sealed class MailpitApiClient : IDisposable
 
     public void Dispose() => _client.Dispose();
 
+    public async Task<int> CountMessagesAsync(string query, CancellationToken cancellationToken)
+    {
+        var summary = await FindMessagesAsync(query, cancellationToken).ConfigureAwait(false);
+        return summary.Messages.Length;
+    }
+
     public async Task<MailpitMessage> FindSingleMessageAsync(string query, CancellationToken cancellationToken)
     {
-        var uri = new Uri($"api/v1/search?query={Uri.EscapeDataString(query)}", UriKind.Relative);
+        var summary = await FindMessagesAsync(query, cancellationToken).ConfigureAwait(false);
 
-        using var summaryResponse = await _client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
-        _ = summaryResponse.EnsureSuccessStatusCode();
-
-        await using var summaryStream = await summaryResponse
-            .Content.ReadAsStreamAsync(cancellationToken)
-            .ConfigureAwait(false);
-        var summary = await JsonSerializer
-            .DeserializeAsync<MailpitMessagesSummary>(summaryStream, cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-
-        if (summary is null || summary.Messages.Length != 1)
+        if (summary.Messages.Length != 1)
         {
             throw new InvalidOperationException(
-                $"Expected exactly one message matching query '{query}', found {summary?.Messages.Length ?? 0}."
+                $"Expected exactly one message matching query '{query}', found {summary.Messages.Length}."
             );
         }
 
@@ -55,6 +51,23 @@ internal sealed class MailpitApiClient : IDisposable
             .ConfigureAwait(false);
 
         return message ?? throw new InvalidOperationException("The Mailpit message could not be deserialized.");
+    }
+
+    private async Task<MailpitMessagesSummary> FindMessagesAsync(string query, CancellationToken cancellationToken)
+    {
+        var uri = new Uri($"api/v1/search?query={Uri.EscapeDataString(query)}", UriKind.Relative);
+
+        using var summaryResponse = await _client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
+        _ = summaryResponse.EnsureSuccessStatusCode();
+
+        await using var summaryStream = await summaryResponse
+            .Content.ReadAsStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var summary = await JsonSerializer
+            .DeserializeAsync<MailpitMessagesSummary>(summaryStream, cancellationToken: cancellationToken)
+            .ConfigureAwait(false);
+
+        return summary ?? new MailpitMessagesSummary();
     }
 }
 
