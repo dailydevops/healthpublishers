@@ -1,0 +1,9 @@
+﻿{
+  Subject: [Unhealthy] Health check report - <system-identifier>,
+  Text:
+Health check report Unhealthy in 5ms
+Timestamp: <timestamp>
+System: <system-identifier>
+Machine: <machine-name>
+
+}

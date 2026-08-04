@@ -1,0 +1,12 @@
+﻿{
+  Subject: [Degraded] Health check report - <system-identifier>,
+  Text:
+Health check report Degraded in 5ms
+Timestamp: <timestamp>
+System: <system-identifier>
+Machine: <machine-name>
+
+Entries:
+- self: Degraded (5ms) - slow
+
+}
