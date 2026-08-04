@@ -32,6 +32,7 @@
     <Project Path="src/NetEvolve.HealthPublishers.Prometheus.PushGateway/NetEvolve.HealthPublishers.Prometheus.PushGateway.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Seq/NetEvolve.HealthPublishers.Seq.csproj" />
     <Project Path="src/NetEvolve.HealthPublishers.Splunk/NetEvolve.HealthPublishers.Splunk.csproj" />
+    <Project Path="src/NetEvolve.HealthPublishers.Webhook/NetEvolve.HealthPublishers.Webhook.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/NetEvolve.HealthPublishers.Tests.Architecture/NetEvolve.HealthPublishers.Tests.Architecture.csproj" />

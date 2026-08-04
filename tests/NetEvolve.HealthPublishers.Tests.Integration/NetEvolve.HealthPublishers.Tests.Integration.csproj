@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Prometheus.PushGateway\NetEvolve.HealthPublishers.Prometheus.PushGateway.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Seq\NetEvolve.HealthPublishers.Seq.csproj" />
     <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Splunk\NetEvolve.HealthPublishers.Splunk.csproj" />
+    <ProjectReference Include="..\..\src\NetEvolve.HealthPublishers.Webhook\NetEvolve.HealthPublishers.Webhook.csproj" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="NetEvolve.Extensions.TUnit.IntegrationTestAttribute" />

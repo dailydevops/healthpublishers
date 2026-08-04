@@ -1,0 +1,25 @@
+﻿{
+  Entries: [
+    {
+      DurationMs: 3.0,
+      Name: database,
+      Status: Healthy,
+      Tags: [
+        db,
+        sql
+      ]
+    },
+    {
+      Description: slow response,
+      DurationMs: 120.0,
+      Name: cache,
+      Status: Degraded,
+      Tags: [
+        cache
+      ]
+    }
+  ],
+  Status: Degraded,
+  SystemIdentifier: integration-tests,
+  TotalDurationMs: 123.0
+}
