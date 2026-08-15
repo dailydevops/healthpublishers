@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
     <PackageReference Include="NetEvolve.Extensions.TUnit" />
     <PackageReference Include="OpenTelemetry.Exporter.InMemory" />
+    <PackageReference Include="SSH.NET" />
     <PackageReference Include="Testcontainers" />
     <PackageReference Include="Testcontainers.Elasticsearch" />
     <PackageReference Include="Testcontainers.Floci" />
