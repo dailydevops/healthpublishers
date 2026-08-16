@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
 
 using global::OpenTelemetry;
 using global::OpenTelemetry.Logs;
@@ -15,13 +15,4 @@ internal sealed class TestTelemetryChannel
         configuration.ConfigureOpenTelemetryBuilder(builder =>
             builder.WithLogging(logging => logging.AddInMemoryExporter(LogRecords))
         );
-}
-
-internal static class LogRecordExtensions
-{
-    public static string? GetAvailabilityAttribute(this LogRecord record, string name) =>
-        record.GetAttribute($"microsoft.availability.{name}");
-
-    public static string? GetAttribute(this LogRecord record, string key) =>
-        record.Attributes?.FirstOrDefault(attribute => attribute.Key == key).Value?.ToString();
 }

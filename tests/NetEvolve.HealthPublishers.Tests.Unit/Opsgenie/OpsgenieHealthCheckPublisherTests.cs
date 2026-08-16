@@ -121,10 +121,10 @@ public sealed class OpsgenieHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        Task Act(CancellationToken token = default) => publisher.PublishAsync(report, cancellationToken);
+        Task Act(CancellationToken token = default) => publisher.PublishAsync(report, token);
 
         // Assert
-        _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
+        _ = await Assert.ThrowsAsync<HttpRequestException>(() => Act(cancellationToken));
     }
 
     [Test]
@@ -151,10 +151,10 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        Task Act(CancellationToken token = default) => publisher.PublishAsync(report, cancellationToken);
+        Task Act(CancellationToken token = default) => publisher.PublishAsync(report, token);
 
         // Assert
-        _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
+        _ = await Assert.ThrowsAsync<HttpRequestException>(() => Act(cancellationToken));
     }
 
     [Test]

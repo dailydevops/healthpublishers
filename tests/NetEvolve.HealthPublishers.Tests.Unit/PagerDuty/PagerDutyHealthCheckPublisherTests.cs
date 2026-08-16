@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.PagerDuty;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.PagerDuty;
 
 using System;
 using System.Collections.Generic;
@@ -273,10 +273,10 @@ public sealed class PagerDutyHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        async Task Act(CancellationToken token = default) => await publisher.PublishAsync(report, cancellationToken);
+        async Task Act(CancellationToken token = default) => await publisher.PublishAsync(report, token);
 
         // Assert
-        _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
+        _ = await Assert.ThrowsAsync<HttpRequestException>(() => Act(cancellationToken));
     }
 
     private static IOptionsMonitor<PagerDutyOptions> CreateOptionsMonitor(Action<PagerDutyOptions> configure)

@@ -48,7 +48,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyIndexedDocument(indexName);
+        await VerifyIndexedDocument(indexName, cancellationToken);
     }
 
     [Test]
@@ -83,7 +83,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyIndexedDocument(indexName);
+        await VerifyIndexedDocument(indexName, cancellationToken);
     }
 
     [Test]
@@ -118,7 +118,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyIndexedDocument(indexName);
+        await VerifyIndexedDocument(indexName, cancellationToken);
     }
 
     [Test]
@@ -162,7 +162,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyIndexedDocument(indexName);
+        await VerifyIndexedDocument(indexName, cancellationToken);
     }
 
     [Test]
@@ -191,7 +191,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyIndexedDocument(indexName);
+        await VerifyIndexedDocument(indexName, cancellationToken);
     }
 
     [Test]

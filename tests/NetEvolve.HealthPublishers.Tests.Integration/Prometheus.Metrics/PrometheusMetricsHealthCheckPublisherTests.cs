@@ -36,7 +36,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyRegistry(registry);
+        await VerifyRegistry(registry, cancellationToken);
     }
 
     [Test]
@@ -63,7 +63,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyRegistry(registry);
+        await VerifyRegistry(registry, cancellationToken);
     }
 
     [Test]
@@ -90,7 +90,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyRegistry(registry);
+        await VerifyRegistry(registry, cancellationToken);
     }
 
     [Test]
@@ -126,7 +126,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyRegistry(registry);
+        await VerifyRegistry(registry, cancellationToken);
     }
 
     [Test]
@@ -152,7 +152,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyRegistry(registry);
+        await VerifyRegistry(registry, cancellationToken);
     }
 
     [Test]

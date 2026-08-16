@@ -1,14 +1,8 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Internals;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Internals;
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-
-internal sealed record RecordedMeasurement(
-    string InstrumentName,
-    double Value,
-    IReadOnlyDictionary<string, string?> Tags
-);
 
 /// <summary>
 /// A <see cref="MeterListener"/> wrapper that captures every measurement recorded on a named <see cref="Meter"/>,

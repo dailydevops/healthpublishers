@@ -49,7 +49,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
@@ -85,7 +85,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
@@ -121,7 +121,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
@@ -164,7 +164,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
@@ -194,7 +194,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]

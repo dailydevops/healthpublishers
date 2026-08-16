@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
 
 using System.Globalization;
 using System.Threading;
@@ -72,8 +72,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, channel) = CreatePublisher(options =>
         {
@@ -102,8 +103,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, channel) = CreatePublisher(options =>
         {
@@ -141,8 +143,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -197,8 +200,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddApplicationInsightsPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddApplicationInsightsPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
@@ -271,8 +275,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddApplicationInsightsPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport()
+    public async Task AddApplicationInsightsPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         _ = services
