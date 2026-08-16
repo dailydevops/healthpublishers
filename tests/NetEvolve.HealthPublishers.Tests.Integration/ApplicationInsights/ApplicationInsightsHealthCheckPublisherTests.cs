@@ -143,7 +143,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
         // Arrange
@@ -200,7 +202,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddApplicationInsightsPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(CancellationToken cancellationToken = default)
+    public async Task AddApplicationInsightsPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
         // Arrange
@@ -275,7 +279,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddApplicationInsightsPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport(CancellationToken cancellationToken = default)
+    public async Task AddApplicationInsightsPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport(
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
         // Arrange
