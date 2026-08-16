@@ -1,0 +1,16 @@
+﻿{
+  Color: attention,
+  Details: - **self**: Unhealthy (5ms) - boom,
+  Facts: [
+    {
+      Title: System,
+      Value: integration-tests
+    },
+    {
+      Title: Duration,
+      Value: 5ms
+    }
+  ],
+  Title: Health check report: Unhealthy,
+  Type: AdaptiveCard
+}

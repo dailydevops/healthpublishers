@@ -24,6 +24,7 @@ internal static class HealthPublisherArchitecture
             typeof(Datadog.DatadogOptions).Assembly,
             typeof(Elasticsearch.ElasticsearchOptions).Assembly,
             typeof(Email.EmailOptions).Assembly,
+            typeof(MicrosoftTeams.MicrosoftTeamsOptions).Assembly,
             typeof(OpenTelemetry.OpenTelemetryOptions).Assembly,
             typeof(Opsgenie.OpsgenieOptions).Assembly,
             typeof(PagerDuty.PagerDutyOptions).Assembly,
