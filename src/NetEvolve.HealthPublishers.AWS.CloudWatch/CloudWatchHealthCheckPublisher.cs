@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.AWS.CloudWatch;
+﻿namespace NetEvolve.HealthPublishers.AWS.CloudWatch;
 
 using System;
 using System.Collections.Generic;
@@ -40,6 +40,8 @@ internal sealed class CloudWatchHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
         var now = _timeProvider.GetUtcNow().UtcDateTime;
         var machineName = Environment.MachineName;

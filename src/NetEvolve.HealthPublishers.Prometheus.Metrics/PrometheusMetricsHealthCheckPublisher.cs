@@ -30,6 +30,8 @@ internal sealed class PrometheusMetricsHealthCheckPublisher : IHealthCheckPublis
 
     public Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
         var systemIdentifier = options.SystemIdentifier;
         var machineName = Environment.MachineName;

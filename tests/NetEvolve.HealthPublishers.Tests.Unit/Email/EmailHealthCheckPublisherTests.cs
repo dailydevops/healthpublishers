@@ -24,8 +24,12 @@ public sealed class EmailHealthCheckPublisherTests
     [Test]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
-    public async Task PublishAsync_WhenReportHasStatus_SendsMessageWithStatusInSubject(HealthStatus status)
+    public async Task PublishAsync_WhenReportHasStatus_SendsMessageWithStatusInSubject(
+        HealthStatus status,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -42,7 +46,7 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())
@@ -54,8 +58,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenFreshPublisherReceivesHealthyReport_DoesNotSend()
+    public async Task PublishAsync_WhenFreshPublisherReceivesHealthyReport_DoesNotSend(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options => { });
@@ -63,15 +70,16 @@ public sealed class EmailHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Never);
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SetsFromAndToAddresses()
+    public async Task PublishAsync_WhenCalled_SetsFromAndToAddresses(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -90,7 +98,7 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var message = captured!;
@@ -107,8 +115,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_IncludesMachineNameAndSystemIdentifierInBody()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_IncludesMachineNameAndSystemIdentifierInBody(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -123,7 +134,7 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var body = GetTextBody(captured!);
@@ -135,8 +146,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenTimeZoneIdNotConfigured_IncludesTimestampInBerlinTimeZoneByDefault()
+    public async Task PublishAsync_WhenTimeZoneIdNotConfigured_IncludesTimestampInBerlinTimeZoneByDefault(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -152,7 +166,7 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert - TestStart is 2026-01-02T03:04:05Z; Europe/Berlin is CET (UTC+1) in January, no DST.
         var body = GetTextBody(captured!);
@@ -160,8 +174,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenTimeZoneIdConfigured_ConvertsTimestampToThatZone()
+    public async Task PublishAsync_WhenTimeZoneIdConfigured_ConvertsTimestampToThatZone(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -177,7 +194,7 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert - TestStart is 2026-01-02T03:04:05Z; America/New_York is EST (UTC-5) in January, no DST.
         var body = GetTextBody(captured!);
@@ -185,8 +202,9 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForDate()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForDate(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -202,15 +220,18 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.That(captured!.Date).IsEqualTo(timeProvider.GetUtcNow());
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_OmitsEntriesSection()
+    public async Task PublishAsync_WhenReportHasNoEntries_OmitsEntriesSection(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -232,10 +253,10 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(baselineReport, CancellationToken.None); // moves baseline off Healthy
-        await publisher.PublishAsync(report, CancellationToken.None); // starts the recovery-confirmation timer
+        await publisher.PublishAsync(baselineReport, cancellationToken); // moves baseline off Healthy
+        await publisher.PublishAsync(report, cancellationToken); // starts the recovery-confirmation timer
         timeProvider.Advance(TimeSpan.FromMinutes(5));
-        await publisher.PublishAsync(report, CancellationToken.None); // pending window elapsed, now sends
+        await publisher.PublishAsync(report, cancellationToken); // pending window elapsed, now sends
 
         // Assert
         var body = GetTextBody(captured!);
@@ -247,8 +268,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInBody()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInBody(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -271,7 +295,7 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var body = GetTextBody(captured!);
@@ -283,8 +307,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSuffix()
+    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSuffix(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         MimeMessage? captured = null;
@@ -309,10 +336,10 @@ public sealed class EmailHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(baselineReport, CancellationToken.None); // moves baseline off Healthy
-        await publisher.PublishAsync(report, CancellationToken.None); // starts the recovery-confirmation timer
+        await publisher.PublishAsync(baselineReport, cancellationToken); // moves baseline off Healthy
+        await publisher.PublishAsync(report, cancellationToken); // starts the recovery-confirmation timer
         timeProvider.Advance(TimeSpan.FromMinutes(5));
-        await publisher.PublishAsync(report, CancellationToken.None); // pending window elapsed, now sends
+        await publisher.PublishAsync(report, cancellationToken); // pending window elapsed, now sends
 
         // Assert
         var body = GetTextBody(captured!);
@@ -320,8 +347,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSmtpConnectionFails_PropagatesException()
+    public async Task PublishAsync_WhenSmtpConnectionFails_PropagatesException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         _ = mock.SendAsync(Any(), Any(), Any()).Throws<SocketException>();
@@ -337,7 +367,7 @@ public sealed class EmailHealthCheckPublisherTests
         SocketException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (SocketException ex)
         {
@@ -349,8 +379,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSmtpAuthenticationFails_PropagatesException()
+    public async Task PublishAsync_WhenSmtpAuthenticationFails_PropagatesException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         _ = mock.SendAsync(Any(), Any(), Any()).Throws(new AuthenticationException("bad credentials"));
@@ -370,7 +403,7 @@ public sealed class EmailHealthCheckPublisherTests
         AuthenticationException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (AuthenticationException ex)
         {
@@ -382,8 +415,11 @@ public sealed class EmailHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenStatusWorsensFromHealthyToDegraded_SendsImmediately()
+    public async Task PublishAsync_WhenStatusWorsensFromHealthyToDegraded_SendsImmediately(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -394,15 +430,18 @@ public sealed class EmailHealthCheckPublisherTests
         var report = CreateReport(HealthStatus.Degraded);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
     }
 
     [Test]
-    public async Task PublishAsync_WhenStatusWorsensFromHealthyToUnhealthy_SendsImmediately()
+    public async Task PublishAsync_WhenStatusWorsensFromHealthyToUnhealthy_SendsImmediately(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -413,15 +452,18 @@ public sealed class EmailHealthCheckPublisherTests
         var report = CreateReport(HealthStatus.Unhealthy);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
     }
 
     [Test]
-    public async Task PublishAsync_WhenStatusWorsensAgainFromDegradedToUnhealthy_SendsImmediately()
+    public async Task PublishAsync_WhenStatusWorsensAgainFromDegradedToUnhealthy_SendsImmediately(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -431,16 +473,19 @@ public sealed class EmailHealthCheckPublisherTests
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
 
         // Act
-        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None);
-        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None);
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken);
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken);
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Exactly(2));
     }
 
     [Test]
-    public async Task PublishAsync_WhenImprovementNotYetSustained_DoesNotSend()
+    public async Task PublishAsync_WhenImprovementNotYetSustained_DoesNotSend(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -450,17 +495,20 @@ public sealed class EmailHealthCheckPublisherTests
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
 
         // Act
-        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
         timeProvider.Advance(TimeSpan.FromMinutes(4));
-        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // improvement, not yet due
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // improvement, not yet due
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
     }
 
     [Test]
-    public async Task PublishAsync_WhenImprovementSustainedForExactlyTheDelay_Sends()
+    public async Task PublishAsync_WhenImprovementSustainedForExactlyTheDelay_Sends(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -470,18 +518,21 @@ public sealed class EmailHealthCheckPublisherTests
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
 
         // Act
-        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
-        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // improvement, starts timer
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // improvement, starts timer
         timeProvider.Advance(TimeSpan.FromMinutes(5));
-        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // pending window elapsed, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // pending window elapsed, sends
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Exactly(2));
     }
 
     [Test]
-    public async Task PublishAsync_WhenRegressingBackToLastNotifiedStatus_CancelsPendingAndRestartsTimer()
+    public async Task PublishAsync_WhenRegressingBackToLastNotifiedStatus_CancelsPendingAndRestartsTimer(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -491,19 +542,22 @@ public sealed class EmailHealthCheckPublisherTests
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
 
         // Act
-        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
-        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // improvement, starts timer
-        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // matches last-notified, cancels pending
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // improvement, starts timer
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // matches last-notified, cancels pending
         timeProvider.Advance(TimeSpan.FromMinutes(10)); // well past the delay
-        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // fresh pending timer starting now, not due yet
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // fresh pending timer starting now, not due yet
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);
     }
 
     [Test]
-    public async Task PublishAsync_WhenFluctuatingBetweenImprovedStatuses_DoesNotResetPendingTimer()
+    public async Task PublishAsync_WhenFluctuatingBetweenImprovedStatuses_DoesNotResetPendingTimer(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -513,20 +567,23 @@ public sealed class EmailHealthCheckPublisherTests
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
 
         // Act
-        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), CancellationToken.None); // worsening, sends
-        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // improvement, timer starts at t0
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // improvement, timer starts at t0
         timeProvider.Advance(TimeSpan.FromMinutes(1));
-        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // still an improvement, timer origin unchanged
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // still an improvement, timer origin unchanged
         timeProvider.Advance(TimeSpan.FromMinutes(4)); // total elapsed from t0 is now exactly the delay
-        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), CancellationToken.None); // sends, proving the timer origin stayed at t0
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // sends, proving the timer origin stayed at t0
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Exactly(2));
     }
 
     [Test]
-    public async Task PublishAsync_WhenStatusMatchesLastNotifiedStatus_DoesNotSendAgain()
+    public async Task PublishAsync_WhenStatusMatchesLastNotifiedStatus_DoesNotSendAgain(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options =>
@@ -536,8 +593,8 @@ public sealed class EmailHealthCheckPublisherTests
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, timeProvider);
 
         // Act
-        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // worsening, sends
-        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), CancellationToken.None); // matches last-notified, no-op
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // worsening, sends
+        await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // matches last-notified, no-op
 
         // Assert
         mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Once);

@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Opsgenie;
+﻿namespace NetEvolve.HealthPublishers.Opsgenie;
 
 using System.Globalization;
 using System.Net;
@@ -39,6 +39,8 @@ internal sealed class OpsgenieHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
         var alias = BuildAlias(options.SystemIdentifier);
 
@@ -66,6 +68,8 @@ internal sealed class OpsgenieHealthCheckPublisher : IHealthCheckPublisher
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var now = _timeProvider.GetUtcNow();
 
         var alert = new Dictionary<string, object?>
@@ -99,6 +103,8 @@ internal sealed class OpsgenieHealthCheckPublisher : IHealthCheckPublisher
 
     private static async Task CloseAlertAsync(HttpClient client, string alias, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         using var content = new StringContent("{}", Encoding.UTF8, "application/json");
 
         var uri = new Uri($"v2/alerts/{Uri.EscapeDataString(alias)}/close?identifierType=alias", UriKind.Relative);

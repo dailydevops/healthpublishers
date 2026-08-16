@@ -21,12 +21,16 @@ internal sealed class MailpitApiClient : IDisposable
 
     public async Task<int> CountMessagesAsync(string query, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var summary = await FindMessagesAsync(query, cancellationToken).ConfigureAwait(false);
         return summary.Messages.Length;
     }
 
     public async Task<MailpitMessage> FindSingleMessageAsync(string query, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var summary = await FindMessagesAsync(query, cancellationToken).ConfigureAwait(false);
 
         if (summary.Messages.Length != 1)
@@ -55,6 +59,8 @@ internal sealed class MailpitApiClient : IDisposable
 
     private async Task<MailpitMessagesSummary> FindMessagesAsync(string query, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var uri = new Uri($"api/v1/search?query={Uri.EscapeDataString(query)}", UriKind.Relative);
 
         using var summaryResponse = await _client.GetAsync(uri, cancellationToken).ConfigureAwait(false);

@@ -22,8 +22,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     public OpsgenieHealthCheckPublisherTests(OpsgenieMockServer server) => _server = server;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_ClosesAlertSucceeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_ClosesAlertSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -40,15 +43,16 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedCloseRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -71,15 +75,16 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -102,15 +107,16 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -142,15 +148,18 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_WhenApiKeyProvided_SendsApiKeyHeaderAndSucceeds()
+    public async Task PublishAsync_WhenApiKeyProvided_SendsApiKeyHeaderAndSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -173,7 +182,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert
@@ -182,8 +191,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -200,7 +212,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedCloseRequest(handler);
@@ -241,8 +253,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddOpsgeniePublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddOpsgeniePublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         await using var secondServer = new OpsgenieMockServer();
         await secondServer.InitializeAsync();
@@ -298,7 +313,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert

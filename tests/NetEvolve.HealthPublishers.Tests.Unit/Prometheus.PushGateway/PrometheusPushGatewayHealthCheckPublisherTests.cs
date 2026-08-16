@@ -23,8 +23,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     private static readonly char[] MetricNameTerminators = ['{', ' '];
 
     [Test]
-    public async Task PublishAsync_WhenCalled_PutsToJobAndInstancePath()
+    public async Task PublishAsync_WhenCalled_PutsToJobAndInstancePath(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -40,7 +41,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -54,8 +55,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenJobAndInstanceContainReservedCharacters_EscapesPathSegments()
+    public async Task PublishAsync_WhenJobAndInstanceContainReservedCharacters_EscapesPathSegments(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -71,7 +75,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -81,8 +85,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenJobOrInstanceContainSlash_UsesBase64PathSegment()
+    public async Task PublishAsync_WhenJobOrInstanceContainSlash_UsesBase64PathSegment(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -102,7 +109,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -112,8 +119,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsPrometheusTextExpositionContentType()
+    public async Task PublishAsync_WhenCalled_SendsPrometheusTextExpositionContentType(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -129,7 +139,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -142,9 +152,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, 0)]
     public async Task PublishAsync_WhenReportHasStatus_SendsMappedReportStatusGauge(
         HealthStatus status,
-        int expectedValue
+        int expectedValue,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -166,7 +178,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -174,8 +186,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_IncludesReportDurationInSeconds()
+    public async Task PublishAsync_WhenCalled_IncludesReportDurationInSeconds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -194,7 +209,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -202,8 +217,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForLastPublishTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForLastPublishTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -215,7 +233,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -227,8 +245,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_OmitsPerCheckMetricFamilies()
+    public async Task PublishAsync_WhenReportHasNoEntries_OmitsPerCheckMetricFamilies(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -244,7 +265,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -256,8 +277,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesPerCheckStatusAndDuration()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesPerCheckStatusAndDuration(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -292,7 +316,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -316,8 +340,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenDescriptionContainsReservedCharacters_EscapesLabelValue()
+    public async Task PublishAsync_WhenDescriptionContainsReservedCharacters_EscapesLabelValue(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -345,7 +372,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -353,8 +380,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierLabels()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierLabels(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -370,7 +400,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -382,8 +412,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_ProducesStructurallyValidExpositionBody()
+    public async Task PublishAsync_WhenCalled_ProducesStructurallyValidExpositionBody(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory
@@ -418,7 +451,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var body = factory.Handler.Requests[0].Body!;

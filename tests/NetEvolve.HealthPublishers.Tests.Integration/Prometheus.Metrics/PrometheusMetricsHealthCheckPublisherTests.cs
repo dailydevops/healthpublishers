@@ -19,8 +19,9 @@ using NetEvolve.HealthPublishers.Prometheus.Metrics;
 public sealed class PrometheusMetricsHealthCheckPublisherTests
 {
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, registry) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
         var report = new HealthReport(
@@ -32,15 +33,16 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyRegistry(registry);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, registry) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
         var report = new HealthReport(
@@ -58,15 +60,16 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyRegistry(registry);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, registry) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
         var report = new HealthReport(
@@ -84,15 +87,16 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyRegistry(registry);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, registry) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
         var report = new HealthReport(
@@ -119,15 +123,18 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyRegistry(registry);
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -142,7 +149,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyRegistry(registry);
@@ -167,8 +174,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddPrometheusMetricsPublisher_WhenRegisteredWithDifferentNames_KeepsRegistriesIsolated()
+    public async Task AddPrometheusMetricsPublisher_WhenRegisteredWithDifferentNames_KeepsRegistriesIsolated(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
@@ -187,15 +197,15 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
         var internalRegistry = provider.GetRequiredKeyedService<CollectorRegistry>("Internal");
         var externalRegistry = provider.GetRequiredKeyedService<CollectorRegistry>("External");
 
-        var internalText = await ExportAsTextAsync(internalRegistry);
-        var externalText = await ExportAsTextAsync(externalRegistry);
+        var internalText = await ExportAsTextAsync(internalRegistry, cancellationToken);
+        var externalText = await ExportAsTextAsync(externalRegistry, cancellationToken);
 
         using (Assert.Multiple())
         {
@@ -208,8 +218,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddPrometheusMetricsPublisher_WhenRegisteredViaHealthChecksPipeline_RecordsRealHealthReport()
+    public async Task AddPrometheusMetricsPublisher_WhenRegisteredViaHealthChecksPipeline_RecordsRealHealthReport(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         _ = services
@@ -222,14 +235,14 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var registry = provider.GetRequiredKeyedService<CollectorRegistry>(DependencyInjectionExtensions.DefaultName);
-        var text = await ExportAsTextAsync(registry);
+        var text = await ExportAsTextAsync(registry, cancellationToken);
 
         using (Assert.Multiple())
         {
@@ -240,8 +253,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntriesChurnAcrossManyPublishes_OnlyLatestReportEntriesRemainInRegistry()
+    public async Task PublishAsync_WhenEntriesChurnAcrossManyPublishes_OnlyLatestReportEntriesRemainInRegistry(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, registry) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
 
@@ -273,11 +289,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
             }
 
             var report = new HealthReport(entries, TimeSpan.FromMilliseconds(1));
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
-        var text = await ExportAsTextAsync(registry);
+        var text = await ExportAsTextAsync(registry, cancellationToken);
         var lastWave = waves[^1];
         var staleChecks = waves.SelectMany(wave => wave).Distinct(StringComparer.Ordinal).Except(lastWave);
 
@@ -301,16 +317,23 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         TimeSpan.FromSeconds(1)
     );
 
-    private static async Task<string> ExportAsTextAsync(CollectorRegistry registry)
+    private static async Task<string> ExportAsTextAsync(
+        CollectorRegistry registry,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         using var stream = new MemoryStream();
-        await registry.CollectAndExportAsTextAsync(stream, CancellationToken.None);
+        await registry.CollectAndExportAsTextAsync(stream, cancellationToken);
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    private static async Task VerifyRegistry(CollectorRegistry registry)
+    private static async Task VerifyRegistry(CollectorRegistry registry, CancellationToken cancellationToken = default)
     {
-        var text = await ExportAsTextAsync(registry);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var text = await ExportAsTextAsync(registry, cancellationToken);
 
         using (Assert.Multiple())
         {

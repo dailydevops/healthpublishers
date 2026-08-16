@@ -25,9 +25,11 @@ public sealed class DatadogHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, "error")]
     public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithMappedAlertType(
         HealthStatus status,
-        string expectedAlertType
+        string expectedAlertType,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -42,7 +44,7 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -55,8 +57,9 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsApiKeyHeader()
+    public async Task PublishAsync_WhenCalled_SendsApiKeyHeader(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -65,7 +68,7 @@ public sealed class DatadogHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -73,8 +76,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierTags()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierTags(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -83,7 +89,7 @@ public sealed class DatadogHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -95,8 +101,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForDateHappened()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForDateHappened(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -106,7 +115,7 @@ public sealed class DatadogHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -116,8 +125,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInText()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInText(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -138,7 +150,7 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -150,8 +162,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryTextWithoutMarkers()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryTextWithoutMarkers(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -163,7 +178,7 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -177,8 +192,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator()
+    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -193,7 +211,7 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -207,8 +225,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLineWithinMarkers()
+    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLineWithinMarkers(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -236,7 +257,7 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -257,8 +278,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportTextExceedsMaxLength_DropsWholeOverflowingEntriesAndKeepsClosingMarker()
+    public async Task PublishAsync_WhenReportTextExceedsMaxLength_DropsWholeOverflowingEntriesAndKeepsClosingMarker(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
@@ -278,7 +302,7 @@ public sealed class DatadogHealthCheckPublisherTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(200));
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];

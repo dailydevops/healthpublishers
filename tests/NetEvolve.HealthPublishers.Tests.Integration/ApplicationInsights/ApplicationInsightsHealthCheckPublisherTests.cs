@@ -1,6 +1,7 @@
 namespace NetEvolve.HealthPublishers.Tests.Integration.ApplicationInsights;
 
 using System.Globalization;
+using System.Threading;
 using global::OpenTelemetry.Logs;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Configuration;
@@ -15,8 +16,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     private const string TestConnectionString = "InstrumentationKey=11111111-1111-1111-1111-111111111111";
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, channel) = CreatePublisher(options =>
         {
@@ -32,15 +34,16 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedTelemetry(channel);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, channel) = CreatePublisher(options =>
         {
@@ -62,7 +65,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedTelemetry(channel);
@@ -92,7 +95,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedTelemetry(channel);
@@ -131,7 +134,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedTelemetry(channel);
@@ -155,7 +158,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedTelemetry(channel);
@@ -251,7 +254,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
@@ -299,10 +302,10 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())

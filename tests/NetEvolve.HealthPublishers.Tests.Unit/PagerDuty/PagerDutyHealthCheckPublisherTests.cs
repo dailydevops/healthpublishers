@@ -22,8 +22,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     private const string TestName = "Test";
 
     [Test]
-    public async Task PublishAsync_WhenReportHealthy_SendsResolveEventWithoutPayload()
+    public async Task PublishAsync_WhenReportHealthy_SendsResolveEventWithoutPayload(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -32,7 +35,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -51,9 +54,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, "critical")]
     public async Task PublishAsync_WhenReportNotHealthy_SendsTriggerEventWithMappedSeverity(
         HealthStatus status,
-        string expectedSeverity
+        string expectedSeverity,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -68,7 +73,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -84,8 +89,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsStableDedupKey()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsStableDedupKey(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -110,8 +118,8 @@ public sealed class PagerDutyHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(unhealthyReport, CancellationToken.None);
-        await publisher.PublishAsync(healthyReport, CancellationToken.None);
+        await publisher.PublishAsync(unhealthyReport, cancellationToken);
+        await publisher.PublishAsync(healthyReport, cancellationToken);
 
         // Assert
         using var triggerDocument = JsonDocument.Parse(factory.Handler.Requests[0].Body!);
@@ -126,8 +134,9 @@ public sealed class PagerDutyHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsRoutingKey()
+    public async Task PublishAsync_WhenCalled_SendsRoutingKey(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -136,7 +145,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -144,8 +153,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenTriggering_SendsMachineNameAsSource()
+    public async Task PublishAsync_WhenTriggering_SendsMachineNameAsSource(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -166,7 +178,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -176,8 +188,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenTriggering_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenTriggering_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -193,7 +208,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -203,8 +218,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInCustomDetails()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInCustomDetails(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
@@ -225,7 +243,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -242,8 +260,11 @@ public sealed class PagerDutyHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenServerRespondsWithFailureStatusCode_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenServerRespondsWithFailureStatusCode_ThrowsHttpRequestException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.BadRequest);
@@ -252,7 +273,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, CancellationToken.None);
+        async Task Act(CancellationToken token = default) => await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);

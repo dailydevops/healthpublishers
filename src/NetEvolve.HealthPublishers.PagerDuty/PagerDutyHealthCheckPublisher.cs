@@ -31,6 +31,8 @@ internal sealed class PagerDutyHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         var dedupKey = BuildDedupKey(options.SystemIdentifier);

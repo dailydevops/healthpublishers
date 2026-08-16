@@ -23,8 +23,13 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     [Arguments(HealthStatus.Healthy, 2)]
     [Arguments(HealthStatus.Degraded, 1)]
     [Arguments(HealthStatus.Unhealthy, 0)]
-    public async Task PublishAsync_WhenReportHasStatus_SetsReportStatusGauge(HealthStatus status, int expected)
+    public async Task PublishAsync_WhenReportHasStatus_SetsReportStatusGauge(
+        HealthStatus status,
+        int expected,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, instruments, _) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(
@@ -36,7 +41,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var gauge = instruments.ReportStatus.WithLabels("checkout-service", Environment.MachineName);
@@ -44,8 +49,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasDuration_SetsReportDurationGaugeInSeconds()
+    public async Task PublishAsync_WhenReportHasDuration_SetsReportDurationGaugeInSeconds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, instruments, _) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(
@@ -54,7 +62,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var gauge = instruments.ReportDuration.WithLabels("checkout-service", Environment.MachineName);
@@ -62,8 +70,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SetsLastPublishTimestampFromTimeProvider()
+    public async Task PublishAsync_WhenCalled_SetsLastPublishTimestampFromTimeProvider(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var (publisher, instruments, _) = CreatePublisher(
@@ -73,7 +84,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var gauge = instruments.LastPublishTimestamp.WithLabels("checkout-service", Environment.MachineName);
@@ -81,8 +92,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_SetsEntryStatusAndDurationGauges()
+    public async Task PublishAsync_WhenReportHasEntries_SetsEntryStatusAndDurationGauges(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, instruments, _) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(
@@ -107,7 +121,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())
@@ -144,8 +158,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryDisappearsFromLaterReport_RemovesStaleEntryGaugeSeries()
+    public async Task PublishAsync_WhenEntryDisappearsFromLaterReport_RemovesStaleEntryGaugeSeries(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, _, registry) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var firstReport = new HealthReport(
@@ -167,17 +184,20 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(firstReport, CancellationToken.None);
-        await publisher.PublishAsync(secondReport, CancellationToken.None);
+        await publisher.PublishAsync(firstReport, cancellationToken);
+        await publisher.PublishAsync(secondReport, cancellationToken);
 
         // Assert
-        var text = await ExportAsTextAsync(registry);
+        var text = await ExportAsTextAsync(registry, cancellationToken);
         _ = await Assert.That(text).DoesNotContain("check=\"database\"");
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryDescriptionChangesBetweenReports_RemovesStalePreviousDescriptionSeries()
+    public async Task PublishAsync_WhenEntryDescriptionChangesBetweenReports_RemovesStalePreviousDescriptionSeries(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, _, registry) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var firstReport = new HealthReport(
@@ -208,11 +228,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(firstReport, CancellationToken.None);
-        await publisher.PublishAsync(secondReport, CancellationToken.None);
+        await publisher.PublishAsync(firstReport, cancellationToken);
+        await publisher.PublishAsync(secondReport, cancellationToken);
 
         // Assert
-        var text = await ExportAsTextAsync(registry);
+        var text = await ExportAsTextAsync(registry, cancellationToken);
         using (Assert.Multiple())
         {
             _ = await Assert.That(text).DoesNotContain("description=\"boom\"");
@@ -221,8 +241,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSomeEntriesPersist_RemovesOnlyStaleEntryAndKeepsCurrentOnes()
+    public async Task PublishAsync_WhenSomeEntriesPersist_RemovesOnlyStaleEntryAndKeepsCurrentOnes(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, instruments, registry) = CreatePublisher(options =>
             options.SystemIdentifier = "checkout-service"
@@ -262,11 +285,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(firstReport, CancellationToken.None);
-        await publisher.PublishAsync(secondReport, CancellationToken.None);
+        await publisher.PublishAsync(firstReport, cancellationToken);
+        await publisher.PublishAsync(secondReport, cancellationToken);
 
         // Assert
-        var text = await ExportAsTextAsync(registry);
+        var text = await ExportAsTextAsync(registry, cancellationToken);
         using (Assert.Multiple())
         {
             _ = await Assert.That(text).DoesNotContain("check=\"cache\"");
@@ -282,8 +305,11 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSameEntriesRepeatAcrossPublishes_DoesNotRemoveThem()
+    public async Task PublishAsync_WhenSameEntriesRepeatAcrossPublishes_DoesNotRemoveThem(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, _, registry) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(
@@ -301,19 +327,24 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
-        await publisher.PublishAsync(report, CancellationToken.None);
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
+        await publisher.PublishAsync(report, cancellationToken);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        var text = await ExportAsTextAsync(registry);
+        var text = await ExportAsTextAsync(registry, cancellationToken);
         _ = await Assert.That(text).Contains("check=\"database\"");
     }
 
-    private static async Task<string> ExportAsTextAsync(CollectorRegistry registry)
+    private static async Task<string> ExportAsTextAsync(
+        CollectorRegistry registry,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         using var stream = new MemoryStream();
-        await registry.CollectAndExportAsTextAsync(stream, CancellationToken.None);
+        await registry.CollectAndExportAsTextAsync(stream, cancellationToken);
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 

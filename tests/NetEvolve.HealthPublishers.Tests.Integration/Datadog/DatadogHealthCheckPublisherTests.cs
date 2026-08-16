@@ -22,8 +22,9 @@ public sealed class DatadogHealthCheckPublisherTests
     public DatadogHealthCheckPublisherTests(DatadogMockServer server) => _server = server;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -40,15 +41,16 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -71,15 +73,16 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -102,15 +105,16 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -142,15 +146,18 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_WhenApiKeyProvided_SendsApiKeyHeaderAndSucceeds()
+    public async Task PublishAsync_WhenApiKeyProvided_SendsApiKeyHeaderAndSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -164,15 +171,18 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.That(handler.CapturedRequestHeaders?.GetValues("DD-API-KEY")).Contains("integration-test-key");
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -189,7 +199,7 @@ public sealed class DatadogHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
@@ -230,8 +240,11 @@ public sealed class DatadogHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddDatadogPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddDatadogPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         await using var secondServer = new DatadogMockServer();
         await secondServer.InitializeAsync();
@@ -278,7 +291,7 @@ public sealed class DatadogHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert

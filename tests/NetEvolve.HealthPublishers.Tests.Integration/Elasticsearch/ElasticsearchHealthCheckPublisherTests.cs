@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Elasticsearch;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Elasticsearch;
 
 using System;
 using System.Collections.Generic;
@@ -23,8 +23,9 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     public ElasticsearchHealthCheckPublisherTests(ElasticsearchContainer container) => _container = container;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var indexName = CreateIndexName();
         var publisher = CreatePublisher(options =>
@@ -44,15 +45,16 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyIndexedDocument(indexName);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var indexName = CreateIndexName();
         var publisher = CreatePublisher(options =>
@@ -78,15 +80,16 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyIndexedDocument(indexName);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var indexName = CreateIndexName();
         var publisher = CreatePublisher(options =>
@@ -112,15 +115,16 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyIndexedDocument(indexName);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var indexName = CreateIndexName();
         var publisher = CreatePublisher(options =>
@@ -155,15 +159,18 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyIndexedDocument(indexName);
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var indexName = CreateIndexName();
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
@@ -181,7 +188,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyIndexedDocument(indexName);
@@ -228,8 +235,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddElasticsearchPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddElasticsearchPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         await using var secondContainer = new ElasticsearchContainer();
         await secondContainer.InitializeAsync();
@@ -275,12 +285,12 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
-        var internalDocument = await FetchDocument(_container.ServerUri, internalIndex);
-        var externalDocument = await FetchDocument(secondContainer.ServerUri, externalIndex);
+        var internalDocument = await FetchDocument(_container.ServerUri, internalIndex, cancellationToken);
+        var externalDocument = await FetchDocument(secondContainer.ServerUri, externalIndex, cancellationToken);
         using (Assert.Multiple())
         {
             _ = await Assert.That(publishers.Length).IsEqualTo(2);
@@ -294,9 +304,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
 
     private static string CreateIndexName() => $"health-checks-{Guid.NewGuid():N}";
 
-    private async Task VerifyIndexedDocument(string indexName)
+    private async Task VerifyIndexedDocument(string indexName, CancellationToken cancellationToken = default)
     {
-        var document = await FetchDocument(_container.ServerUri, indexName);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var document = await FetchDocument(_container.ServerUri, indexName, cancellationToken);
 
         using (Assert.Multiple())
         {
@@ -307,8 +319,14 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         _ = await Verify(Normalize(document)).IgnoreParametersForVerified();
     }
 
-    private static async Task<ElasticsearchHealthDocument> FetchDocument(Uri serverUri, string indexName)
+    private static async Task<ElasticsearchHealthDocument> FetchDocument(
+        Uri serverUri,
+        string indexName,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var client = DependencyInjectionExtensions.CreateClient(
             new ElasticsearchOptions
             {
@@ -321,10 +339,10 @@ public sealed class ElasticsearchHealthCheckPublisherTests
             configureSettings: ConfigureTestSettings
         );
 
-        _ = await client.Indices.RefreshAsync(indexName, CancellationToken.None).ConfigureAwait(false);
+        _ = await client.Indices.RefreshAsync(indexName, cancellationToken).ConfigureAwait(false);
 
         var response = await client
-            .SearchAsync<ElasticsearchHealthDocument>(request => request.Indices(indexName), CancellationToken.None)
+            .SearchAsync<ElasticsearchHealthDocument>(request => request.Indices(indexName), cancellationToken)
             .ConfigureAwait(false);
 
         return response.Documents.Single();

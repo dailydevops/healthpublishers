@@ -30,6 +30,8 @@ internal sealed class SeqHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         var clefEvent = new Dictionary<string, object?>

@@ -28,9 +28,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, 0d)]
     public async Task PublishAsync_WhenReportHasStatus_SendsOverallStatusMetricWithExpectedValue(
         HealthStatus status,
-        double expectedValue
+        double expectedValue,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);
@@ -43,7 +45,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -52,15 +54,16 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsToConfiguredNamespace()
+    public async Task PublishAsync_WhenCalled_SendsToConfiguredNamespace(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock, options => options.Namespace = "Custom/Namespace");
         var report = EmptyReport();
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -68,15 +71,18 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_TagsMetricsWithSystemIdentifierAndMachineName()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_TagsMetricsWithSystemIdentifierAndMachineName(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock, options => options.SystemIdentifier = "checkout-service");
         var report = EmptyReport();
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -93,8 +99,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
@@ -102,7 +111,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var report = EmptyReport();
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -111,8 +120,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsDurationMetricInMilliseconds()
+    public async Task PublishAsync_WhenCalled_SendsDurationMetricInMilliseconds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);
@@ -122,7 +134,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -131,8 +143,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesPerCheckMetricsWithCheckNameDimension()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesPerCheckMetricsWithCheckNameDimension(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);
@@ -151,7 +166,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -167,15 +182,18 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsOnlyOverallMetrics()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsOnlyOverallMetrics(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);
         var report = EmptyReport();
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -183,8 +201,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasMultipleEntries_SendsMetricsForEachEntry()
+    public async Task PublishAsync_WhenReportHasMultipleEntries_SendsMetricsForEachEntry(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);
@@ -210,7 +231,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = CapturedRequest(mock);
@@ -219,8 +240,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenServiceThrowsThrottlingException_PropagatesException()
+    public async Task PublishAsync_WhenServiceThrowsThrottlingException_PropagatesException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         _ = mock.PutMetricDataAsync(Any<PutMetricDataRequest>(), Any<CancellationToken>())
@@ -232,7 +256,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         LimitExceededException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (LimitExceededException ex)
         {
@@ -244,8 +268,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenServiceThrowsInternalServiceException_PropagatesException()
+    public async Task PublishAsync_WhenServiceThrowsInternalServiceException_PropagatesException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var mock = CreateMock();
         _ = mock.PutMetricDataAsync(Any<PutMetricDataRequest>(), Any<CancellationToken>())
@@ -257,7 +284,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         InternalServiceException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (InternalServiceException ex)
         {

@@ -24,9 +24,11 @@ public sealed class SeqHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, "Error")]
     public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithMappedLevel(
         HealthStatus status,
-        string expectedLevel
+        string expectedLevel,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
         _ = factory.Handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);
@@ -41,7 +43,7 @@ public sealed class SeqHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -55,8 +57,9 @@ public sealed class SeqHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenApiKeyProvided_SendsApiKeyHeader()
+    public async Task PublishAsync_WhenApiKeyProvided_SendsApiKeyHeader(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
         _ = factory.Handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);
@@ -69,7 +72,7 @@ public sealed class SeqHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -77,8 +80,11 @@ public sealed class SeqHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifier()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifier(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
         _ = factory.Handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);
@@ -91,7 +97,7 @@ public sealed class SeqHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -103,8 +109,11 @@ public sealed class SeqHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
         _ = factory.Handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);
@@ -114,7 +123,7 @@ public sealed class SeqHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];

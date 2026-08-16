@@ -22,8 +22,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     public PrometheusPushGatewayHealthCheckPublisherTests(PrometheusPushGatewayMockServer server) => _server = server;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -41,15 +42,16 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -73,15 +75,16 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -105,15 +108,16 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -146,15 +150,18 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_WhenInstanceProvided_PostsToJobAndInstancePathAndSucceeds()
+    public async Task PublishAsync_WhenInstanceProvided_PostsToJobAndInstancePathAndSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -169,15 +176,18 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.That(handler.CapturedRequestBody).IsNotNull();
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -195,7 +205,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
@@ -236,8 +246,11 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddPrometheusPushGateway_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddPrometheusPushGateway_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         await using var secondServer = new PrometheusPushGatewayMockServer();
         await secondServer.InitializeAsync();
@@ -286,7 +299,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert

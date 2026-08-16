@@ -35,8 +35,12 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     [Arguments(HealthStatus.Healthy)]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
-    public async Task PublishAsync_WhenReportHasStatus_SendsDocumentWithStatus(HealthStatus status)
+    public async Task PublishAsync_WhenReportHasStatus_SendsDocumentWithStatus(
+        HealthStatus status,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = CreateSuccessHandler();
         var (publisher, _) = CreatePublisher(handler);
@@ -49,7 +53,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = handler.Requests[0];
@@ -61,15 +65,18 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifier()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifier(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = CreateSuccessHandler();
         var (publisher, _) = CreatePublisher(handler, options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = handler.Requests[0];
@@ -81,8 +88,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = CreateSuccessHandler();
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
@@ -90,7 +100,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = handler.Requests[0];
@@ -100,8 +110,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenIndexNameConfigured_IndexesIntoConfiguredIndex()
+    public async Task PublishAsync_WhenIndexNameConfigured_IndexesIntoConfiguredIndex(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = Mock.HttpHandler();
         _ = handler
@@ -113,15 +126,18 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.That(handler.Requests[0].RequestUri!.AbsolutePath).IsEqualTo("/custom-index/_doc");
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInDocument()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInDocument(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = CreateSuccessHandler();
         var (publisher, _) = CreatePublisher(handler);
@@ -141,7 +157,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = handler.Requests[0];
@@ -159,8 +175,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsEmptyEntriesAndOverallStatus()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsEmptyEntriesAndOverallStatus(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = CreateSuccessHandler();
         var (publisher, _) = CreatePublisher(handler);
@@ -170,7 +189,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = handler.Requests[0];
@@ -184,8 +203,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryDescriptionNull_SendsNullDescription()
+    public async Task PublishAsync_WhenEntryDescriptionNull_SendsNullDescription(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = CreateSuccessHandler();
         var (publisher, _) = CreatePublisher(handler);
@@ -198,7 +220,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = handler.Requests[0];
@@ -210,8 +232,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenResponseIsNotSuccessStatusCode_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenResponseIsNotSuccessStatusCode_ThrowsHttpRequestException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = Mock.HttpHandler();
         _ = handler
@@ -225,7 +250,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         HttpRequestException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (HttpRequestException ex)
         {
@@ -237,8 +262,11 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenTransportThrows_ThrowsHttpRequestExceptionWithOriginalExceptionAsInnerException()
+    public async Task PublishAsync_WhenTransportThrows_ThrowsHttpRequestExceptionWithOriginalExceptionAsInnerException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var handler = Mock.HttpHandler();
         handler.OnPost(IndexPath).Throws(new HttpRequestException("connection refused"));
@@ -249,7 +277,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         HttpRequestException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (HttpRequestException ex)
         {

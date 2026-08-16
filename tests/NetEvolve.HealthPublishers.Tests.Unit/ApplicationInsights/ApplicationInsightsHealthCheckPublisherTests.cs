@@ -1,6 +1,7 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.ApplicationInsights;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.ApplicationInsights;
 
 using System.Globalization;
+using System.Threading;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,9 +23,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, false)]
     public async Task PublishAsync_WhenReportHasStatus_SetsSuccessBasedOnStatus(
         HealthStatus status,
-        bool expectedSuccess
+        bool expectedSuccess,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -45,7 +48,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -57,8 +60,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SetsMachineNameAndSystemIdentifierProperties()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SetsMachineNameAndSystemIdentifierProperties(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -73,7 +79,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -85,8 +91,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -102,7 +111,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -115,8 +124,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SetsDurationFromReportTotalDuration()
+    public async Task PublishAsync_WhenCalled_SetsDurationFromReportTotalDuration(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -134,7 +146,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -143,8 +155,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SetsRunLocationToMachineName()
+    public async Task PublishAsync_WhenCalled_SetsRunLocationToMachineName(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -159,7 +174,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -167,8 +182,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SetsNameToHealthReport()
+    public async Task PublishAsync_WhenCalled_SetsNameToHealthReport(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -183,7 +199,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -191,8 +207,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SerializesEntriesIntoPropertiesJson()
+    public async Task PublishAsync_WhenCalled_SerializesEntriesIntoPropertiesJson(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -219,7 +238,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var telemetry = channel.LogRecords.Single();
@@ -233,8 +252,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_FlushesTelemetryClientAsynchronously()
+    public async Task PublishAsync_WhenCalled_FlushesTelemetryClientAsynchronously(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -249,7 +271,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         // The in-memory exporter only receives log records once flushed; without the
@@ -258,8 +280,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalledMultipleTimes_GeneratesUniqueIds()
+    public async Task PublishAsync_WhenCalledMultipleTimes_GeneratesUniqueIds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);
@@ -274,8 +299,8 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var ids = channel.LogRecords.Select(record => record.GetAvailabilityAttribute("id")).ToList();

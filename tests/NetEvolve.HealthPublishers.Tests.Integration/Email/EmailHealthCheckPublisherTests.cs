@@ -31,8 +31,11 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
     public void Dispose() => _api.Dispose();
 
     [Test]
-    public async Task PublishAsync_UseOptions_FreshPublisherHealthyReport_DoesNotSend()
+    public async Task PublishAsync_UseOptions_FreshPublisherHealthyReport_DoesNotSend(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange - a fresh publisher's baseline is Healthy, so a first Healthy report is a no-op, not a send.
         var systemIdentifier = CreateSystemIdentifier();
         var publisher = CreatePublisher(options =>
@@ -52,16 +55,17 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        var count = await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None);
+        var count = await _api.CountMessagesAsync(systemIdentifier, cancellationToken);
         _ = await Assert.That(count).IsEqualTo(0);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
         var publisher = CreatePublisher(options =>
@@ -87,15 +91,16 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifySentMessage(systemIdentifier);
+        await VerifySentMessage(systemIdentifier, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
         var publisher = CreatePublisher(options =>
@@ -121,15 +126,16 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifySentMessage(systemIdentifier);
+        await VerifySentMessage(systemIdentifier, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
         var publisher = CreatePublisher(options =>
@@ -164,15 +170,18 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifySentMessage(systemIdentifier);
+        await VerifySentMessage(systemIdentifier, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_UnhealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
@@ -195,15 +204,18 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifySentMessage(systemIdentifier);
+        await VerifySentMessage(systemIdentifier, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_WhenCredentialsConfigured_AuthenticatesAndSucceeds()
+    public async Task PublishAsync_WhenCredentialsConfigured_AuthenticatesAndSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
         var publisher = CreatePublisher(options =>
@@ -224,15 +236,18 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifySentMessage(systemIdentifier);
+        await VerifySentMessage(systemIdentifier, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_WhenStatusImprovesAfterWorsening_WaitsForRecoveryConfirmationDelayBeforeSending()
+    public async Task PublishAsync_WhenStatusImprovesAfterWorsening_WaitsForRecoveryConfirmationDelayBeforeSending(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var systemIdentifier = CreateSystemIdentifier();
         var timeProvider = new FakeTimeProvider();
@@ -261,17 +276,17 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         );
 
         // Act & Assert - the worsening sends immediately.
-        await publisher.PublishAsync(unhealthyReport, CancellationToken.None);
-        _ = await Assert.That(await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None)).IsEqualTo(1);
+        await publisher.PublishAsync(unhealthyReport, cancellationToken);
+        _ = await Assert.That(await _api.CountMessagesAsync(systemIdentifier, cancellationToken)).IsEqualTo(1);
 
         // The subsequent improvement does not send right away - it only starts the recovery-confirmation timer.
-        await publisher.PublishAsync(healthyReport, CancellationToken.None);
-        _ = await Assert.That(await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None)).IsEqualTo(1);
+        await publisher.PublishAsync(healthyReport, cancellationToken);
+        _ = await Assert.That(await _api.CountMessagesAsync(systemIdentifier, cancellationToken)).IsEqualTo(1);
 
         // Once the configured delay has elapsed, the still-improved status is finally reported.
         timeProvider.Advance(delay);
-        await publisher.PublishAsync(healthyReport, CancellationToken.None);
-        var count = await _api.CountMessagesAsync(systemIdentifier, CancellationToken.None);
+        await publisher.PublishAsync(healthyReport, cancellationToken);
+        var count = await _api.CountMessagesAsync(systemIdentifier, cancellationToken);
         _ = await Assert.That(count).IsEqualTo(2);
     }
 
@@ -314,8 +329,11 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
     }
 
     [Test]
-    public async Task AddEmailPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddEmailPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var internalIdentifier = CreateSystemIdentifier();
         var externalIdentifier = CreateSystemIdentifier();
@@ -358,12 +376,12 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
-        var internalMessage = await _api.FindSingleMessageAsync(internalIdentifier, CancellationToken.None);
-        var externalMessage = await _api.FindSingleMessageAsync(externalIdentifier, CancellationToken.None);
+        var internalMessage = await _api.FindSingleMessageAsync(internalIdentifier, cancellationToken);
+        var externalMessage = await _api.FindSingleMessageAsync(externalIdentifier, cancellationToken);
         using (Assert.Multiple())
         {
             _ = await Assert.That(publishers.Length).IsEqualTo(2);
@@ -374,9 +392,11 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
 
     private static string CreateSystemIdentifier() => $"integration-tests-{Guid.NewGuid():N}";
 
-    private async Task VerifySentMessage(string systemIdentifier)
+    private async Task VerifySentMessage(string systemIdentifier, CancellationToken cancellationToken = default)
     {
-        var message = await _api.FindSingleMessageAsync(systemIdentifier, CancellationToken.None);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var message = await _api.FindSingleMessageAsync(systemIdentifier, cancellationToken);
 
         using (Assert.Multiple())
         {

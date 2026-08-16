@@ -21,8 +21,12 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     [Arguments(HealthStatus.Healthy)]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
-    public async Task PublishAsync_WhenReportHasStatus_RecordsReportDurationWithStatusTag(HealthStatus status)
+    public async Task PublishAsync_WhenReportHasStatus_RecordsReportDurationWithStatusTag(
+        HealthStatus status,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var meter = new Meter(DependencyInjectionExtensions.MeterName);
         var instruments = new OpenTelemetryInstruments(meter);
@@ -43,7 +47,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         using var measurements = new MeasurementRecorder(meter, "healthchecks.report.duration");
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())
@@ -56,8 +60,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_TagsMachineNameAndSystemIdentifier()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_TagsMachineNameAndSystemIdentifier(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var meter = new Meter(DependencyInjectionExtensions.MeterName);
         var instruments = new OpenTelemetryInstruments(meter);
@@ -72,7 +79,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         using var measurements = new MeasurementRecorder(meter, "healthchecks.report.duration");
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())
@@ -83,8 +90,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_RecordsEntryDurationPerEntry()
+    public async Task PublishAsync_WhenReportHasEntries_RecordsEntryDurationPerEntry(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var meter = new Meter(DependencyInjectionExtensions.MeterName);
         var instruments = new OpenTelemetryInstruments(meter);
@@ -105,7 +115,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         using var measurements = new MeasurementRecorder(meter, "healthchecks.entry.duration");
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())
@@ -118,8 +128,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var meter = new Meter(DependencyInjectionExtensions.MeterName);
         var instruments = new OpenTelemetryInstruments(meter);
@@ -130,7 +143,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         using var measurements = new MeasurementRecorder(meter, "healthchecks.report.duration");
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert

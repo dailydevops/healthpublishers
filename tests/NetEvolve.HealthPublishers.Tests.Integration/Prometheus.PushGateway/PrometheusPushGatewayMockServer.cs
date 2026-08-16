@@ -64,6 +64,8 @@ public sealed class PrometheusPushGatewayMockServer : IAsyncInitializer, IAsyncD
 
     private async Task AcceptLoopAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         while (!cancellationToken.IsCancellationRequested)
         {
             HttpListenerContext context;
