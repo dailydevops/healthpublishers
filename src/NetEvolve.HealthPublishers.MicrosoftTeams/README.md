@@ -14,6 +14,7 @@ An `IHealthCheckPublisher` implementation that pushes `HealthReport` results to 
 - Configuration- or builder-based setup, consistent with the `NetEvolve.HealthChecks.*` conventions
 - Named registrations to publish to multiple Microsoft Teams channels side by side
 - No Microsoft Teams/Bot Framework client dependency - just `HttpClient` via `IHttpClientFactory`
+- Debounces notifications instead of posting on every publish: a worsening status is posted immediately, while an improving status must stay sustained for a configurable delay before a "recovery" card is posted
 
 ## Installation
 
@@ -65,6 +66,20 @@ builder.AddMicrosoftTeamsPublisher(options =>
 });
 ```
 
+### Notification Behavior
+
+The publisher keeps track of the `HealthStatus` it last actually posted about (per registered instance) and does not
+post a card for every `PublishAsync` call:
+
+- **Same status as last notified**: no card is posted.
+- **Worsening status** (e.g. `Healthy` → `Degraded`, `Degraded` → `Unhealthy`, or `Healthy` → `Unhealthy`): a card
+  is posted immediately, regardless of `RecoveryConfirmationDelay`.
+- **Improving status** (e.g. `Degraded` → `Healthy`, `Unhealthy` → `Degraded`, or `Unhealthy` → `Healthy`): the
+  improvement must be sustained for at least `RecoveryConfirmationDelay` before a "recovery" card is posted. If the
+  status regresses back to the last-notified status before the delay elapses, no card is posted and the delay resets;
+  a later improvement starts a new delay from scratch. If the status regresses to something worse than the
+  last-notified status instead, that is treated as a new worsening event and is posted immediately.
+
 ### Advanced Example
 
 Register multiple named Microsoft Teams targets, each pushing the same health reports to a different channel:
@@ -93,6 +108,7 @@ builder.AddMicrosoftTeamsPublisher(options =>
 {
     options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/..."); // Required
     options.SystemIdentifier = "checkout-service"; // Required
+    options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(10); // Optional, defaults to 5 minutes, minimum 5 minutes
 });
 ```
 
@@ -108,7 +124,8 @@ builder.AddMicrosoftTeamsPublisher(); // reads the "Default" section below
     "MicrosoftTeams": {
       "Default": {
         "WebhookUrl": "https://example.webhook.office.com/webhookb2/...",
-        "SystemIdentifier": "checkout-service"
+        "SystemIdentifier": "checkout-service",
+        "RecoveryConfirmationDelay": "00:10:00"
       }
     }
   }

@@ -1,5 +1,5 @@
 ﻿{
-  Color: good,
+  Color: attention,
   Facts: [
     {
       Title: System,
@@ -10,6 +10,6 @@
       Value: 5ms
     }
   ],
-  Title: Health check report: Healthy,
+  Title: Health check report: Unhealthy,
   Type: AdaptiveCard
 }

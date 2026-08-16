@@ -1,5 +1,6 @@
 namespace NetEvolve.HealthPublishers.MicrosoftTeams;
 
+using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using static Microsoft.Extensions.Options.ValidateOptionsResult;
@@ -48,6 +49,11 @@ internal sealed class MicrosoftTeamsOptionsConfigure
         if (string.IsNullOrWhiteSpace(options.SystemIdentifier))
         {
             return Fail("The SystemIdentifier must be set.");
+        }
+
+        if (options.RecoveryConfirmationDelay < TimeSpan.FromMinutes(5))
+        {
+            return Fail("The RecoveryConfirmationDelay must be at least 5 minutes.");
         }
 
         return Success;

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.MicrosoftTeams;
 using NetEvolve.HealthPublishers.Tests.Integration.Internals;
@@ -23,11 +24,13 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     public MicrosoftTeamsHealthCheckPublisherTests(MicrosoftTeamsMockServer server) => _server = server;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
+    public async Task PublishAsync_UseOptions_FreshPublisherHealthyReport_DoesNotSend(
+        CancellationToken cancellationToken = default
+    )
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Arrange
+        // Arrange - a fresh publisher's baseline is Healthy, so a first Healthy report is a no-op, not a post.
         var (publisher, handler) = CreatePublisher(options =>
         {
             options.WebhookUrl = _server.WebhookUrl;
@@ -45,7 +48,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyCapturedRequest(handler);
+        _ = await Assert.That(handler.CapturedRequestBody).IsNull();
     }
 
     [Test]
@@ -152,7 +155,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+    public async Task PublishAsync_UseConfiguration_UnhealthyReport_Succeeds(
         CancellationToken cancellationToken = default
     )
     {
@@ -166,8 +169,10 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var (publisher, handler) = CreatePublisher(configureConfiguration: config =>
             config.AddInMemoryCollection(values)
         );
+        // A fresh publisher's baseline is Healthy, so the report must be a worsening to send immediately.
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
             TimeSpan.FromMilliseconds(5)
         );
 
@@ -176,6 +181,50 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
 
         // Assert
         await VerifyCapturedRequest(handler);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusImprovesAfterWorsening_WaitsForRecoveryConfirmationDelayBeforeSending(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        var timeProvider = new FakeTimeProvider();
+        var delay = TimeSpan.FromMinutes(5);
+        var (publisher, handler) = CreatePublisher(
+            options =>
+            {
+                options.WebhookUrl = _server.WebhookUrl;
+                options.SystemIdentifier = "integration-tests";
+                options.RecoveryConfirmationDelay = delay;
+            },
+            timeProvider: timeProvider
+        );
+        var unhealthyReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.FromMilliseconds(5)
+        );
+        var healthyReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Healthy,
+            TimeSpan.FromMilliseconds(5)
+        );
+
+        // Act & Assert - the worsening posts immediately.
+        await publisher.PublishAsync(unhealthyReport, cancellationToken);
+        _ = await Assert.That(handler.CapturedRequestBody).Contains("\"color\":\"attention\"");
+
+        // The subsequent improvement does not post right away - it only starts the recovery-confirmation timer,
+        // so no new request is sent and the last captured request is still the worsening one.
+        await publisher.PublishAsync(healthyReport, cancellationToken);
+        _ = await Assert.That(handler.CapturedRequestBody).Contains("\"color\":\"attention\"");
+
+        // Once the configured delay has elapsed, the still-improved status is finally reported.
+        timeProvider.Advance(delay);
+        await publisher.PublishAsync(healthyReport, cancellationToken);
+        _ = await Assert.That(handler.CapturedRequestBody).Contains("\"color\":\"good\"");
     }
 
     [Test]
@@ -256,8 +305,10 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
 
+        // A fresh publisher's baseline is Healthy, so the report must be a worsening to send immediately.
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
             TimeSpan.FromMilliseconds(5)
         );
 
@@ -335,7 +386,8 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
 
     private static (IHealthCheckPublisher Publisher, CapturingHttpMessageHandler Handler) CreatePublisher(
         Action<MicrosoftTeamsOptions>? options = null,
-        Action<IConfigurationBuilder>? configureConfiguration = null
+        Action<IConfigurationBuilder>? configureConfiguration = null,
+        TimeProvider? timeProvider = null
     )
     {
         var configurationBuilder = new ConfigurationBuilder();
@@ -344,6 +396,13 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
 
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
+
+        // AddMicrosoftTeamsPublisher only registers TimeProvider.System via TryAddSingleton, so registering one
+        // upfront lets tests control time (e.g. to assert the RecoveryConfirmationDelay behavior without a real wait).
+        if (timeProvider is not null)
+        {
+            _ = services.AddSingleton(timeProvider);
+        }
 
         _ = builder.AddMicrosoftTeamsPublisher(options);
 

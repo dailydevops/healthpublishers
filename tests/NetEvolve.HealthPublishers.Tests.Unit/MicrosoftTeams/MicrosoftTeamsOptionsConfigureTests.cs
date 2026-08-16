@@ -207,6 +207,53 @@ public sealed class MicrosoftTeamsOptionsConfigureTests
     }
 
     [Test]
+    [Arguments(0)]
+    [Arguments(1)]
+    [Arguments(4)]
+    public async Task Validate_WhenRecoveryConfirmationDelayBelowMinimum_ReturnFailure(int minutes)
+    {
+        // Arrange
+        var configure = new MicrosoftTeamsOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = new MicrosoftTeamsOptions
+        {
+            WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x"),
+            SystemIdentifier = "checkout-service",
+            RecoveryConfirmationDelay = TimeSpan.FromMinutes(minutes),
+        };
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(result.Failed).IsTrue();
+            _ = await Assert
+                .That(result.FailureMessage)
+                .IsEqualTo("The RecoveryConfirmationDelay must be at least 5 minutes.");
+        }
+    }
+
+    [Test]
+    public async Task Validate_WhenRecoveryConfirmationDelayAtMinimum_ReturnSuccess()
+    {
+        // Arrange
+        var configure = new MicrosoftTeamsOptionsConfigure(new ConfigurationBuilder().Build());
+        var options = new MicrosoftTeamsOptions
+        {
+            WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x"),
+            SystemIdentifier = "checkout-service",
+            RecoveryConfirmationDelay = TimeSpan.FromMinutes(5),
+        };
+
+        // Act
+        var result = configure.Validate("Test", options);
+
+        // Assert
+        _ = await Assert.That(result).IsEqualTo(ValidateOptionsResult.Success);
+    }
+
+    [Test]
     public async Task Validate_WhenOptionsValid_ReturnSuccess()
     {
         // Arrange

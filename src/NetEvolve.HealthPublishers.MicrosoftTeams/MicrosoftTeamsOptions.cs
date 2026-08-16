@@ -1,5 +1,8 @@
 namespace NetEvolve.HealthPublishers.MicrosoftTeams;
 
+using System;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 /// <summary>
 /// Represents configuration options for the Microsoft Teams health check publisher.
 /// </summary>
@@ -22,4 +25,14 @@ public sealed record MicrosoftTeamsOptions
     /// useful to distinguish reports coming from the same machine across multiple applications or instances.
     /// </remarks>
     public string SystemIdentifier { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the minimum duration an improved <see cref="HealthStatus"/> must be sustained before a
+    /// recovery card is posted.
+    /// </summary>
+    /// <remarks>
+    /// Optional. Defaults to <c>5</c> minutes. Worsening statuses are always posted immediately and are not
+    /// affected by this option. An enforced minimum of <c>5</c> minutes applies.
+    /// </remarks>
+    public TimeSpan RecoveryConfirmationDelay { get; set; } = TimeSpan.FromMinutes(5);
 }

@@ -1,6 +1,7 @@
 ﻿namespace NetEvolve.HealthPublishers.MicrosoftTeams;
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -15,6 +16,10 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IOptionsMonitor<MicrosoftTeamsOptions> _options;
     private readonly TimeProvider _timeProvider;
+    private readonly object _notificationLock = new();
+
+    private HealthStatus _lastNotifiedStatus = HealthStatus.Healthy;
+    private DateTimeOffset? _pendingSince;
 
     public MicrosoftTeamsHealthCheckPublisher(
         string name,
@@ -34,6 +39,12 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
         cancellationToken.ThrowIfCancellationRequested();
 
         var options = _options.Get(_name);
+
+        if (!ShouldNotify(report.Status, options.RecoveryConfirmationDelay))
+        {
+            return;
+        }
+
         var now = _timeProvider.GetUtcNow();
 
         var card = BuildMessage(report, options, now);
@@ -50,6 +61,52 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
 
         _ = response.EnsureSuccessStatusCode();
     }
+
+    private bool ShouldNotify(HealthStatus newStatus, TimeSpan recoveryConfirmationDelay)
+    {
+        lock (_notificationLock)
+        {
+            var newSeverity = Severity(newStatus);
+            var lastSeverity = Severity(_lastNotifiedStatus);
+
+            if (newSeverity == lastSeverity)
+            {
+                // Status matches the last-notified status: cancel any pending recovery confirmation.
+                _pendingSince = null;
+                return false;
+            }
+
+            if (newSeverity > lastSeverity)
+            {
+                // Worsening: notify immediately and clear any pending recovery confirmation.
+                _lastNotifiedStatus = newStatus;
+                _pendingSince = null;
+                return true;
+            }
+
+            // Improvement: only notify once sustained for at least the configured delay.
+            var now = _timeProvider.GetUtcNow();
+
+            _pendingSince ??= now;
+
+            if (now - _pendingSince.Value < recoveryConfirmationDelay)
+            {
+                return false;
+            }
+
+            _lastNotifiedStatus = newStatus;
+            _pendingSince = null;
+            return true;
+        }
+    }
+
+    private static int Severity(HealthStatus status) =>
+        status switch
+        {
+            HealthStatus.Healthy => 0,
+            HealthStatus.Degraded => 1,
+            _ => 2,
+        };
 
     // A conservative cap for the details text block, well within the ~28 KB Adaptive Card payload
     // recommendation, to avoid excessively large webhook requests when a report has many entries.
@@ -84,7 +141,10 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
                     new Dictionary<string, object?>
                     {
                         ["title"] = "Duration",
-                        ["value"] = $"{report.TotalDuration.TotalMilliseconds:0.##}ms",
+                        ["value"] = string.Create(
+                            CultureInfo.InvariantCulture,
+                            $"{report.TotalDuration.TotalMilliseconds:0.##}ms"
+                        ),
                     },
                     new Dictionary<string, object?> { ["title"] = "Checked at", ["value"] = now.ToString("O") },
                 },
@@ -138,8 +198,10 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
             var description = string.IsNullOrWhiteSpace(entry.Value.Description)
                 ? string.Empty
                 : $" - {entry.Value.Description}";
-            var line =
-                $"- **{entry.Key}**: {entry.Value.Status} ({entry.Value.Duration.TotalMilliseconds:0.##}ms){description}\n\n";
+            var line = string.Create(
+                CultureInfo.InvariantCulture,
+                $"- **{entry.Key}**: {entry.Value.Status} ({entry.Value.Duration.TotalMilliseconds:0.##}ms){description}\n\n"
+            );
 
             // Drop whole entries that would overflow the limit, rather than cutting one in half.
             if (builder.Length + line.Length > MaxDetailsLength)
