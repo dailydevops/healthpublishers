@@ -24,8 +24,12 @@ public sealed class SplunkHealthCheckPublisherTests
     [Arguments(HealthStatus.Healthy)]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
-    public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithStatus(HealthStatus status)
+    public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithStatus(
+        HealthStatus status,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -40,7 +44,7 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -52,8 +56,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsAuthorizationHeaderWithHecToken()
+    public async Task PublishAsync_WhenCalled_SendsAuthorizationHeaderWithHecToken(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -62,7 +69,7 @@ public sealed class SplunkHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -70,8 +77,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifier()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifier(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -80,7 +90,7 @@ public sealed class SplunkHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -92,8 +102,9 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTime()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTime(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -103,7 +114,7 @@ public sealed class SplunkHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -113,8 +124,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSourceTypeNotSet_OmitsSourcetypeField()
+    public async Task PublishAsync_WhenSourceTypeNotSet_OmitsSourcetypeField(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -123,7 +137,7 @@ public sealed class SplunkHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -132,8 +146,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSourceTypeSourceAndIndexSet_IncludesThemInPayload()
+    public async Task PublishAsync_WhenSourceTypeSourceAndIndexSet_IncludesThemInPayload(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -147,7 +164,7 @@ public sealed class SplunkHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -161,8 +178,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInEvent()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInEvent(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -184,7 +204,7 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -202,8 +222,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsMessageWithOverallStatusAndElapsedTime()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsMessageWithOverallStatusAndElapsedTime(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
@@ -215,7 +238,7 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -225,8 +248,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenResponseIsNotSuccessStatusCode_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenResponseIsNotSuccessStatusCode_ThrowsHttpRequestException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.InternalServerError);
@@ -238,7 +264,7 @@ public sealed class SplunkHealthCheckPublisherTests
         HttpRequestException? caught = null;
         try
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
         catch (HttpRequestException ex)
         {

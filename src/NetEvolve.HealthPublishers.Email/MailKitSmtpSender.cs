@@ -13,6 +13,8 @@ internal sealed class MailKitSmtpSender : ISmtpSender
 {
     public async Task SendAsync(EmailOptions options, MimeMessage message, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         using var client = new SmtpClient();
 
         await client

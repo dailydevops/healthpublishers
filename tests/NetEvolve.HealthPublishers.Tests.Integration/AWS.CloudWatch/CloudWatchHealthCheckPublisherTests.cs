@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.AWS.CloudWatch;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.AWS.CloudWatch;
 
 using System;
 using System.Collections.Generic;
@@ -23,8 +23,9 @@ public sealed class CloudWatchHealthCheckPublisherTests
     public CloudWatchHealthCheckPublisherTests(CloudWatchFlociContainer container) => _container = container;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
@@ -45,15 +46,16 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
@@ -80,15 +82,16 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
@@ -115,15 +118,16 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var @namespace = CreateNamespace();
         var publisher = CreatePublisher(options =>
@@ -157,15 +161,18 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var @namespace = CreateNamespace();
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
@@ -184,10 +191,10 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        await VerifyPublishedMetrics(@namespace);
+        await VerifyPublishedMetrics(@namespace, cancellationToken);
     }
 
     [Test]
@@ -209,8 +216,11 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddAWSCloudWatchPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddAWSCloudWatchPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var internalNamespace = CreateNamespace();
         var externalNamespace = CreateNamespace();
@@ -231,21 +241,24 @@ public sealed class CloudWatchHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
         using (Assert.Multiple())
         {
             _ = await Assert.That(publishers.Length).IsEqualTo(2);
-            _ = await AssertMetricsPublished(internalNamespace);
-            _ = await AssertMetricsPublished(externalNamespace);
+            _ = await AssertMetricsPublished(internalNamespace, cancellationToken);
+            _ = await AssertMetricsPublished(externalNamespace, cancellationToken);
         }
     }
 
     [Test]
-    public async Task AddAWSCloudWatchPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport()
+    public async Task AddAWSCloudWatchPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var @namespace = CreateNamespace();
         var services = new ServiceCollection();
@@ -259,22 +272,25 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())
         {
             _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
-            _ = await AssertMetricsPublished(@namespace);
+            _ = await AssertMetricsPublished(@namespace, cancellationToken);
         }
     }
 
     [Test]
-    public async Task AddAWSCloudWatchPublisher_WhenMultipleRegisteredViaHealthChecksPipeline_PublishesIndependentRealHealthReports()
+    public async Task AddAWSCloudWatchPublisher_WhenMultipleRegisteredViaHealthChecksPipeline_PublishesIndependentRealHealthReports(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var internalNamespace = CreateNamespace();
         var externalNamespace = CreateNamespace();
@@ -290,12 +306,12 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
@@ -303,8 +319,8 @@ public sealed class CloudWatchHealthCheckPublisherTests
         {
             _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
             _ = await Assert.That(publishers.Length).IsEqualTo(2);
-            _ = await AssertMetricsPublished(internalNamespace);
-            _ = await AssertMetricsPublished(externalNamespace);
+            _ = await AssertMetricsPublished(internalNamespace, cancellationToken);
+            _ = await AssertMetricsPublished(externalNamespace, cancellationToken);
         }
     }
 
@@ -320,15 +336,22 @@ public sealed class CloudWatchHealthCheckPublisherTests
 
     private static string CreateNamespace() => $"HealthChecks/{Guid.NewGuid():N}";
 
-    private async Task VerifyPublishedMetrics(string @namespace)
+    private async Task VerifyPublishedMetrics(string @namespace, CancellationToken cancellationToken = default)
     {
-        var metrics = await AssertMetricsPublished(@namespace);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var metrics = await AssertMetricsPublished(@namespace, cancellationToken);
 
         _ = await Verify(Normalize(metrics)).IgnoreParametersForVerified();
     }
 
-    private async Task<IReadOnlyList<Metric>> AssertMetricsPublished(string @namespace)
+    private async Task<IReadOnlyList<Metric>> AssertMetricsPublished(
+        string @namespace,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         using var client = DependencyInjectionExtensions.CreateClient(
             new CloudWatchOptions
             {
@@ -343,7 +366,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
 
         var response = await client.ListMetricsAsync(
             new ListMetricsRequest { Namespace = @namespace },
-            CancellationToken.None
+            cancellationToken
         );
 
         var metricNames = response

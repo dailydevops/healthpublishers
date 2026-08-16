@@ -28,6 +28,8 @@ internal sealed class OpenTelemetryHealthCheckPublisher : IHealthCheckPublisher
 
     public Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         // Shared across the report- and entry-level tags; TagList is a struct, so each copy below

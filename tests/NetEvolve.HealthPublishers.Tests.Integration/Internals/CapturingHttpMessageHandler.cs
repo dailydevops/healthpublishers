@@ -25,6 +25,8 @@ internal sealed class CapturingHttpMessageHandler : DelegatingHandler
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         CapturedRequestBody = request.Content is null
             ? null
             : await request.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);

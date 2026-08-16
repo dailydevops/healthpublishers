@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Opsgenie;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Opsgenie;
 
 using System;
 using System.IO;
@@ -66,6 +66,8 @@ public sealed class OpsgenieMockServer : IAsyncInitializer, IAsyncDisposable
 
     private async Task AcceptLoopAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         while (!cancellationToken.IsCancellationRequested)
         {
             HttpListenerContext context;

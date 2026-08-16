@@ -28,6 +28,8 @@ internal sealed class ApplicationInsightsHealthCheckPublisher : IHealthCheckPubl
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         var availability = new AvailabilityTelemetry

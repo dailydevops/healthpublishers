@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.Email;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.Email;
 
 using System;
 using System.Net.Http;
@@ -21,12 +21,16 @@ internal sealed class MailpitApiClient : IDisposable
 
     public async Task<int> CountMessagesAsync(string query, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var summary = await FindMessagesAsync(query, cancellationToken).ConfigureAwait(false);
         return summary.Messages.Length;
     }
 
     public async Task<MailpitMessage> FindSingleMessageAsync(string query, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var summary = await FindMessagesAsync(query, cancellationToken).ConfigureAwait(false);
 
         if (summary.Messages.Length != 1)
@@ -55,6 +59,8 @@ internal sealed class MailpitApiClient : IDisposable
 
     private async Task<MailpitMessagesSummary> FindMessagesAsync(string query, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var uri = new Uri($"api/v1/search?query={Uri.EscapeDataString(query)}", UriKind.Relative);
 
         using var summaryResponse = await _client.GetAsync(uri, cancellationToken).ConfigureAwait(false);
@@ -73,7 +79,7 @@ internal sealed class MailpitApiClient : IDisposable
 
 // The following DTOs are only instantiated via System.Text.Json deserialization, which the CA1812 analyzer
 // cannot see through.
-#pragma warning disable CA1812
+#pragma warning disable CA1812, NE0001
 
 internal sealed class MailpitMessagesSummary
 {
@@ -111,4 +117,4 @@ internal sealed class MailpitAddress
     public string Address { get; set; } = string.Empty;
 }
 
-#pragma warning restore CA1812
+#pragma warning restore CA1812, NE0001

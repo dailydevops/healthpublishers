@@ -23,8 +23,9 @@ public sealed class SplunkHealthCheckPublisherTests
     public SplunkHealthCheckPublisherTests(SplunkContainer container) => _container = container;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -41,15 +42,16 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -72,15 +74,16 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -103,15 +106,16 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -143,15 +147,18 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_WhenHecTokenProvided_SendsAuthorizationHeaderAndSucceeds()
+    public async Task PublishAsync_WhenHecTokenProvided_SendsAuthorizationHeaderAndSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -165,7 +172,7 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert
@@ -174,8 +181,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSourceTypeSourceAndIndexProvided_SendsThemAndSucceeds()
+    public async Task PublishAsync_WhenSourceTypeSourceAndIndexProvided_SendsThemAndSucceeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -192,7 +202,7 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         ArgumentNullException.ThrowIfNull(handler.CapturedRequestBody);
@@ -208,8 +218,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -226,7 +239,7 @@ public sealed class SplunkHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
@@ -267,8 +280,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddSplunkPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddSplunkPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
@@ -312,7 +328,7 @@ public sealed class SplunkHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
@@ -331,8 +347,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddSplunkPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport()
+    public async Task AddSplunkPublisher_WhenRegisteredViaHealthChecksPipeline_PublishesRealHealthReport(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         _ = services
@@ -359,10 +378,10 @@ public sealed class SplunkHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.That(report.Status).IsEqualTo(HealthStatus.Healthy);
@@ -370,8 +389,11 @@ public sealed class SplunkHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddSplunkPublisher_WhenMultipleRegisteredViaHealthChecksPipeline_PublishesIndependentRealHealthReports()
+    public async Task AddSplunkPublisher_WhenMultipleRegisteredViaHealthChecksPipeline_PublishesIndependentRealHealthReports(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         _ = services
@@ -412,12 +434,12 @@ public sealed class SplunkHealthCheckPublisherTests
         var provider = services.BuildServiceProvider();
         var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert

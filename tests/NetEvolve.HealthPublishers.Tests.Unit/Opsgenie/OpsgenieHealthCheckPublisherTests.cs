@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Opsgenie;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Opsgenie;
 
 using System;
 using System.Collections.Generic;
@@ -27,9 +27,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, "P1")]
     public async Task PublishAsync_WhenReportNotHealthy_CreatesAlertWithMappedPriority(
         HealthStatus status,
-        string expectedPriority
+        string expectedPriority,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -44,7 +46,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -58,8 +60,9 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHealthy_ClosesAlertByAlias()
+    public async Task PublishAsync_WhenReportHealthy_ClosesAlertByAlias(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory
@@ -70,7 +73,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -85,8 +88,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHealthyAndAlertAlreadyClosed_DoesNotThrow()
+    public async Task PublishAsync_WhenReportHealthyAndAlertAlreadyClosed_DoesNotThrow(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory
@@ -97,13 +103,14 @@ public sealed class OpsgenieHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act & Assert
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
         _ = await Assert.That(factory.Handler.Requests[0].Matched).IsTrue();
     }
 
     [Test]
-    public async Task PublishAsync_WhenCloseFailsWithServerError_Throws()
+    public async Task PublishAsync_WhenCloseFailsWithServerError_Throws(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory
@@ -114,15 +121,16 @@ public sealed class OpsgenieHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        Task Act() => publisher.PublishAsync(report, CancellationToken.None);
+        Task Act(CancellationToken token = default) => publisher.PublishAsync(report, token);
 
         // Assert
-        _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
+        _ = await Assert.ThrowsAsync<HttpRequestException>(() => Act(cancellationToken));
     }
 
     [Test]
-    public async Task PublishAsync_WhenCreateFailsWithServerError_Throws()
+    public async Task PublishAsync_WhenCreateFailsWithServerError_Throws(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.InternalServerError);
@@ -143,15 +151,18 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        Task Act() => publisher.PublishAsync(report, CancellationToken.None);
+        Task Act(CancellationToken token = default) => publisher.PublishAsync(report, token);
 
         // Assert
-        _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
+        _ = await Assert.ThrowsAsync<HttpRequestException>(() => Act(cancellationToken));
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsApiKeyAsGenieKeyAuthorizationHeader()
+    public async Task PublishAsync_WhenCalled_SendsApiKeyAsGenieKeyAuthorizationHeader(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -172,7 +183,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -180,8 +191,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierTagsAndDetails()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierTagsAndDetails(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -196,7 +210,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -213,8 +227,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForReportedAt()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForReportedAt(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -230,7 +247,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -242,8 +259,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInDescription()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInDescription(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -264,7 +284,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -276,8 +296,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryDescriptionWithoutMarkers()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryDescriptionWithoutMarkers(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -290,7 +313,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -304,8 +327,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator()
+    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -326,7 +352,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -340,8 +366,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLineWithinMarkers()
+    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLineWithinMarkers(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -369,7 +398,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -390,8 +419,11 @@ public sealed class OpsgenieHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportDescriptionExceedsMaxLength_DropsWholeOverflowingEntriesAndKeepsClosingMarker()
+    public async Task PublishAsync_WhenReportDescriptionExceedsMaxLength_DropsWholeOverflowingEntriesAndKeepsClosingMarker(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
@@ -411,7 +443,7 @@ public sealed class OpsgenieHealthCheckPublisherTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(1000));
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];

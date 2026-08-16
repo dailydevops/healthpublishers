@@ -31,6 +31,8 @@ internal sealed class PrometheusPushGatewayHealthCheckPublisher : IHealthCheckPu
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         using var client = _httpClientFactory.CreateClient(

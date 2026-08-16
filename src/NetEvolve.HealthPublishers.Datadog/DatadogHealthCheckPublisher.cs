@@ -30,6 +30,8 @@ internal sealed class DatadogHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         var alertType = MapAlertType(report.Status);

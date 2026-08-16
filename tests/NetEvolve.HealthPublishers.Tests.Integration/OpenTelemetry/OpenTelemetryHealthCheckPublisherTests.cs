@@ -20,8 +20,12 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     [Arguments(HealthStatus.Healthy)]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
-    public async Task PublishAsync_UseOptions_RecordsReportDurationWithStatusTag(HealthStatus status)
+    public async Task PublishAsync_UseOptions_RecordsReportDurationWithStatusTag(
+        HealthStatus status,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, recorder) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
         var report = new HealthReport(
@@ -33,7 +37,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var measurement = recorder.Measurements.Single(m => m.InstrumentName == "healthchecks.report.duration");
@@ -47,8 +51,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_RecordsEntryDurationForEachEntry()
+    public async Task PublishAsync_UseOptions_MultipleEntries_RecordsEntryDurationForEachEntry(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, recorder) = CreatePublisher(options => options.SystemIdentifier = "integration-tests");
         var report = new HealthReport(
@@ -75,7 +82,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var entryMeasurements = recorder
@@ -93,8 +100,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_RecordsMetricsFromConfigurationBoundOptions()
+    public async Task PublishAsync_UseConfiguration_RecordsMetricsFromConfigurationBoundOptions(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -109,7 +119,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var measurement = recorder.Measurements.Single(m => m.InstrumentName == "healthchecks.report.duration");
@@ -135,8 +145,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddOpenTelemetryPublisher_WhenRegisteredWithDifferentNames_TagsMeasurementsWithRespectivePublisherName()
+    public async Task AddOpenTelemetryPublisher_WhenRegisteredWithDifferentNames_TagsMeasurementsWithRespectivePublisherName(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
@@ -156,7 +169,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
@@ -178,8 +191,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddOpenTelemetryPublisher_WhenRegisteredViaHealthChecksPipeline_RecordsRealHealthReport()
+    public async Task AddOpenTelemetryPublisher_WhenRegisteredViaHealthChecksPipeline_RecordsRealHealthReport(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var services = new ServiceCollection();
         _ = services
@@ -193,10 +209,10 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         using var recorder = new MetricsRecorder(provider.GetRequiredService<Meter>());
         var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
         var healthCheckService = provider.GetRequiredService<HealthCheckService>();
-        var report = await healthCheckService.CheckHealthAsync(CancellationToken.None);
+        var report = await healthCheckService.CheckHealthAsync(cancellationToken);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         using (Assert.Multiple())

@@ -35,6 +35,8 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         if (!ShouldNotify(report.Status, options.RecoveryConfirmationDelay))
