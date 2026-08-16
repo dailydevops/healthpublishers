@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.MicrosoftTeams;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.MicrosoftTeams;
 
 using System;
 using System.Collections.Generic;
@@ -29,9 +29,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, "attention")]
     public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithMappedColor(
         HealthStatus status,
-        string expectedColor
+        string expectedColor,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -46,7 +48,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -59,8 +61,9 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_SendsAdaptiveCardAttachment()
+    public async Task PublishAsync_WhenCalled_SendsAdaptiveCardAttachment(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -69,7 +72,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -88,8 +91,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierFacts()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierFacts(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -98,7 +104,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -110,8 +116,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForCheckedAt()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForCheckedAt(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -121,7 +130,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -140,8 +149,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInTextBlock()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInTextBlock(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -162,7 +174,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -174,8 +186,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_OmitsDetailsTextBlock()
+    public async Task PublishAsync_WhenReportHasNoEntries_OmitsDetailsTextBlock(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -187,7 +202,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -197,8 +212,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator()
+    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -213,7 +231,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -225,8 +243,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntry()
+    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntry(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -254,7 +276,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -276,8 +298,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportTextExceedsMaxLength_DropsWholeOverflowingEntries()
+    public async Task PublishAsync_WhenReportTextExceedsMaxLength_DropsWholeOverflowingEntries(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -297,7 +322,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(entries, TimeSpan.FromMilliseconds(200));
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -322,8 +347,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenResponseIsNotSuccess_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenResponseIsNotSuccess_ThrowsHttpRequestException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.InternalServerError);
@@ -332,7 +361,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        Task Act() => publisher.PublishAsync(report, CancellationToken.None);
+        Task Act() => publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);

@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.MicrosoftTeams;
+﻿namespace NetEvolve.HealthPublishers.MicrosoftTeams;
 
 using System.Collections.Generic;
 using System.Net.Http;
@@ -31,6 +31,8 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
         var now = _timeProvider.GetUtcNow();
 

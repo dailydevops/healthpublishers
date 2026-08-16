@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.MicrosoftTeams;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.MicrosoftTeams;
 
 using System;
 using System.IO;

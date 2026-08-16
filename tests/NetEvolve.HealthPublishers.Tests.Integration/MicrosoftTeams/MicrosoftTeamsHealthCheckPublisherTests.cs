@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Integration.MicrosoftTeams;
+﻿namespace NetEvolve.HealthPublishers.Tests.Integration.MicrosoftTeams;
 
 using System;
 using System.Collections.Generic;
@@ -23,8 +23,10 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     public MicrosoftTeamsHealthCheckPublisherTests(MicrosoftTeamsMockServer server) => _server = server;
 
     [Test]
-    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_HealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -40,15 +42,17 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds()
+    public async Task PublishAsync_UseOptions_DegradedReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -70,15 +74,16 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds()
+    public async Task PublishAsync_UseOptions_UnhealthyReport_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -100,15 +105,16 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds()
+    public async Task PublishAsync_UseOptions_MultipleEntries_Succeeds(CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var (publisher, handler) = CreatePublisher(options =>
         {
@@ -139,15 +145,18 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds()
+    public async Task PublishAsync_UseConfiguration_HealthyReport_Succeeds(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var values = new Dictionary<string, string?>(StringComparer.Ordinal)
         {
@@ -163,15 +172,19 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         await VerifyCapturedRequest(handler);
     }
 
     [Test]
-    public void AddMicrosoftTeamsPublisher_WhenNameAlreadyUsed_ThrowsArgumentException()
+    public void AddMicrosoftTeamsPublisher_WhenNameAlreadyUsed_ThrowsArgumentException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
@@ -202,8 +215,11 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task AddMicrosoftTeamsPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget()
+    public async Task AddMicrosoftTeamsPublisher_WhenRegisteredWithDifferentNames_PublishesIndependentlyToEachTarget(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         await using var secondServer = new MicrosoftTeamsMockServer();
         await secondServer.InitializeAsync();
@@ -248,7 +264,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         // Act
         foreach (var publisher in publishers)
         {
-            await publisher.PublishAsync(report, CancellationToken.None);
+            await publisher.PublishAsync(report, cancellationToken);
         }
 
         // Assert
