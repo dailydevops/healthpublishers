@@ -3,9 +3,7 @@
   Details:
 - **database**: Healthy (3ms)
 
-- **cache**: Degraded (120ms) - slow response
-
-,
+- **cache**: Degraded (120ms) - slow response,
   Facts: [
     {
       Title: System,

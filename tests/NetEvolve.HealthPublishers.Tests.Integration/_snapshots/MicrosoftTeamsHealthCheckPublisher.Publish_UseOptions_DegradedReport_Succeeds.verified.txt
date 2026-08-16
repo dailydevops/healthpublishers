@@ -1,9 +1,6 @@
 ﻿{
   Color: warning,
-  Details:
-- **self**: Degraded (5ms) - slow
-
-,
+  Details: - **self**: Degraded (5ms) - slow,
   Facts: [
     {
       Title: System,

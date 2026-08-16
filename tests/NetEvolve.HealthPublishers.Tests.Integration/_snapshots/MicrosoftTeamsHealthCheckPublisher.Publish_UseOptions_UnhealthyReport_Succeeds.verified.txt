@@ -1,9 +1,6 @@
 ﻿{
   Color: attention,
-  Details:
-- **self**: Unhealthy (5ms) - boom
-
-,
+  Details: - **self**: Unhealthy (5ms) - boom,
   Facts: [
     {
       Title: System,

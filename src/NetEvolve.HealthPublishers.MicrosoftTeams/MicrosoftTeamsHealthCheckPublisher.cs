@@ -212,7 +212,7 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
             _ = builder.Append(line);
         }
 
-        return builder.ToString();
+        return builder.ToString().TrimEnd();
     }
 
     private static string MapColor(HealthStatus status) =>
