@@ -39,9 +39,9 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -130,7 +130,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
         var publisher = CreatePublisher(mock);
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -157,12 +157,12 @@ public sealed class CloudWatchHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(120)
+            TimeSpan.FromMilliseconds(120L)
         );
 
         // Act
@@ -215,19 +215,19 @@ public sealed class CloudWatchHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -296,7 +296,7 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     private static HealthReport EmptyReport() =>
-        new(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.FromMilliseconds(42));
+        new(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.FromMilliseconds(42L));
 
     // Never called: IAmazonCloudWatch's static abstract members (from IAmazonService) make TUnit.Mocks'
     // source generator only emit its Mock<T> extensions for the companion IAmazonCloudWatchMockable type,

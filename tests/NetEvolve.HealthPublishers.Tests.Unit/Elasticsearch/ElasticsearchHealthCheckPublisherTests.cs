@@ -47,9 +47,9 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -147,13 +147,13 @@ public sealed class ElasticsearchHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null,
                     tags: ["db", "sql"]
                 ),
             },
-            TimeSpan.FromMilliseconds(120)
+            TimeSpan.FromMilliseconds(120L)
         );
 
         // Act
@@ -185,7 +185,7 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         var (publisher, _) = CreatePublisher(handler);
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act

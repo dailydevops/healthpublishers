@@ -35,9 +35,9 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -58,7 +58,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         var (publisher, instruments, _) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(500)
+            TimeSpan.FromMilliseconds(500L)
         );
 
         // Act
@@ -105,19 +105,19 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -132,7 +132,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                         .EntryStatus.WithLabels("database", string.Empty, "checkout-service", Environment.MachineName)
                         .Value
                 )
-                .IsEqualTo(2);
+                .IsEqualTo(2D);
             _ = await Assert
                 .That(
                     instruments
@@ -146,7 +146,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                         .EntryStatus.WithLabels("cache", "slow response", "checkout-service", Environment.MachineName)
                         .Value
                 )
-                .IsEqualTo(1);
+                .IsEqualTo(1D);
             _ = await Assert
                 .That(
                     instruments
@@ -171,12 +171,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(3)
+            TimeSpan.FromMilliseconds(3L)
         );
         var secondReport = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
@@ -206,12 +206,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Unhealthy,
                     "boom",
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(3)
+            TimeSpan.FromMilliseconds(3L)
         );
         var secondReport = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
@@ -219,12 +219,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(3)
+            TimeSpan.FromMilliseconds(3L)
         );
 
         // Act
@@ -256,19 +256,19 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
         var secondReport = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
@@ -276,12 +276,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(3)
+            TimeSpan.FromMilliseconds(3L)
         );
 
         // Act
@@ -300,7 +300,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                         .EntryStatus.WithLabels("database", string.Empty, "checkout-service", Environment.MachineName)
                         .Value
                 )
-                .IsEqualTo(2);
+                .IsEqualTo(2D);
         }
     }
 
@@ -318,12 +318,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(3)
+            TimeSpan.FromMilliseconds(3L)
         );
 
         // Act
@@ -343,7 +343,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var stream = new MemoryStream();
+        await using var stream = new MemoryStream();
         await registry.CollectAndExportAsTextAsync(stream, cancellationToken);
         return Encoding.UTF8.GetString(stream.ToArray());
     }
@@ -358,8 +358,8 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         _ = services.Configure(TestName, configure);
         var provider = services.BuildServiceProvider();
 
-        var registry = global::Prometheus.Metrics.NewCustomRegistry();
-        var instruments = new PrometheusMetricsInstruments(global::Prometheus.Metrics.WithCustomRegistry(registry));
+        var registry = Metrics.NewCustomRegistry();
+        var instruments = new PrometheusMetricsInstruments(Metrics.WithCustomRegistry(registry));
         var publisher = new PrometheusMetricsHealthCheckPublisher(
             TestName,
             provider.GetRequiredService<IOptionsMonitor<PrometheusMetricsOptions>>(),

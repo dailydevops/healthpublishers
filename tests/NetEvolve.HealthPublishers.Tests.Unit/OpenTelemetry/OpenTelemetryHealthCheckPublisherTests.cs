@@ -40,9 +40,9 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
         using var measurements = new MeasurementRecorder(meter, "healthchecks.report.duration");
 
@@ -108,7 +108,7 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(7), null, null),
+                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(7L), null, null),
             },
             TimeSpan.Zero
         );

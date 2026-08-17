@@ -87,7 +87,7 @@ public sealed record EmailOptions
     /// Optional. Defaults to <c>5</c> minutes. Worsening statuses are always sent immediately and are not
     /// affected by this option. An enforced minimum of <c>5</c> minutes applies.
     /// </remarks>
-    public TimeSpan RecoveryConfirmationDelay { get; set; } = TimeSpan.FromMinutes(5);
+    public TimeSpan RecoveryConfirmationDelay { get; set; } = TimeSpan.FromMinutes(5D);
 
     /// <summary>
     /// Gets or sets the time zone the timestamp included in the email body is converted to.

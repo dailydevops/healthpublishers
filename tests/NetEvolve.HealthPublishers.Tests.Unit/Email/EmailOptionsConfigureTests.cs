@@ -406,7 +406,7 @@ public sealed class EmailOptionsConfigureTests
         // Arrange
         var configure = new EmailOptionsConfigure(new ConfigurationBuilder().Build());
         var options = CreateValidOptions();
-        options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5);
+        options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L);
 
         // Act
         var result = configure.Validate("Test", options);

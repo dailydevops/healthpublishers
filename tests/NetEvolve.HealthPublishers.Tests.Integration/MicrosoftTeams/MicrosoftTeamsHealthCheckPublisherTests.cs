@@ -39,9 +39,9 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -68,12 +68,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -99,12 +99,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Unhealthy,
                     "boom",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -130,7 +130,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null,
                     tags: ["db", "sql"]
@@ -138,13 +138,13 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null,
                     tags: ["cache"]
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -173,7 +173,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
             HealthStatus.Unhealthy,
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -191,7 +191,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         var timeProvider = new FakeTimeProvider();
-        var delay = TimeSpan.FromMinutes(5);
+        var delay = TimeSpan.FromMinutes(5L);
         var (publisher, handler) = CreatePublisher(
             options =>
             {
@@ -204,12 +204,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var unhealthyReport = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
             HealthStatus.Unhealthy,
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
         var healthyReport = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
             HealthStatus.Healthy,
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act & Assert - the worsening posts immediately.
@@ -309,7 +309,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
             HealthStatus.Unhealthy,
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act

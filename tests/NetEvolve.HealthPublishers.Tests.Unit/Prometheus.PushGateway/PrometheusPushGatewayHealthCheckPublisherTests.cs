@@ -172,9 +172,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -205,7 +205,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(1500)
+            TimeSpan.FromMilliseconds(1500L)
         );
 
         // Act
@@ -300,19 +300,19 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(250),
+                    TimeSpan.FromMilliseconds(250L),
                     null,
                     null
                 ),
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(370)
+            TimeSpan.FromMilliseconds(370L)
         );
 
         // Act
@@ -363,12 +363,12 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Unhealthy,
                     "boom \"quoted\" \\ path\nnext line",
-                    TimeSpan.FromMilliseconds(1),
+                    TimeSpan.FromMilliseconds(1L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(1)
+            TimeSpan.FromMilliseconds(1L)
         );
 
         // Act
@@ -435,19 +435,19 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -455,7 +455,7 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
 
         // Assert
         var body = factory.Handler.Requests[0].Body!;
-        var typeMatches = Regex.Matches(body, @"^# TYPE (\S+) ", RegexOptions.Multiline, TimeSpan.FromSeconds(1));
+        var typeMatches = Regex.Matches(body, @"^# TYPE (\S+) ", RegexOptions.Multiline, TimeSpan.FromSeconds(1L));
         var metricNames = typeMatches.Select(match => match.Groups[1].Value).ToArray();
 
         using (Assert.Multiple())

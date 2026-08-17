@@ -243,7 +243,7 @@ public sealed class MicrosoftTeamsOptionsConfigureTests
         {
             WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x"),
             SystemIdentifier = "checkout-service",
-            RecoveryConfirmationDelay = TimeSpan.FromMinutes(5),
+            RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L),
         };
 
         // Act

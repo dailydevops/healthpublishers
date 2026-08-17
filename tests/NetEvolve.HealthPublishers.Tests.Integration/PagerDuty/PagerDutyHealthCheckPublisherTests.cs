@@ -35,9 +35,9 @@ public sealed class PagerDutyHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -64,12 +64,12 @@ public sealed class PagerDutyHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -96,12 +96,12 @@ public sealed class PagerDutyHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Unhealthy,
                     "boom",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -128,7 +128,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null,
                     tags: ["db", "sql"]
@@ -136,13 +136,13 @@ public sealed class PagerDutyHealthCheckPublisherTests
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null,
                     tags: ["cache"]
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -167,7 +167,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         });
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -196,7 +196,7 @@ public sealed class PagerDutyHealthCheckPublisherTests
         );
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -290,12 +290,12 @@ public sealed class PagerDutyHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Unhealthy,
                     null,
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act

@@ -35,7 +35,7 @@ internal sealed class OpsgenieOptionsConfigure
             return Fail("The option cannot be null.");
         }
 
-        if (options.ApiUrl is not null && !options.ApiUrl.IsAbsoluteUri)
+        if (options.ApiUrl?.IsAbsoluteUri == false)
         {
             return Fail("The ApiUrl must be a valid absolute URI.");
         }

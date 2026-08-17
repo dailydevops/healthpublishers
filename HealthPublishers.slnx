@@ -40,4 +40,7 @@
     <Project Path="tests/NetEvolve.HealthPublishers.Tests.Integration/NetEvolve.HealthPublishers.Tests.Integration.csproj" />
     <Project Path="tests/NetEvolve.HealthPublishers.Tests.Unit/NetEvolve.HealthPublishers.Tests.Unit.csproj" />
   </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/NetEvolve.HealthPublishers.MicrosoftTeams.Console/NetEvolve.HealthPublishers.MicrosoftTeams.Console.csproj" />
+  </Folder>
 </Solution>

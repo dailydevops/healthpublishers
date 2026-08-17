@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.MicrosoftTeams;
+﻿namespace NetEvolve.HealthPublishers.MicrosoftTeams;
 
 using System;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -34,5 +34,5 @@ public sealed record MicrosoftTeamsOptions
     /// Optional. Defaults to <c>5</c> minutes. Worsening statuses are always posted immediately and are not
     /// affected by this option. An enforced minimum of <c>5</c> minutes applies.
     /// </remarks>
-    public TimeSpan RecoveryConfirmationDelay { get; set; } = TimeSpan.FromMinutes(5);
+    public TimeSpan RecoveryConfirmationDelay { get; set; } = TimeSpan.FromMinutes(5D);
 }
