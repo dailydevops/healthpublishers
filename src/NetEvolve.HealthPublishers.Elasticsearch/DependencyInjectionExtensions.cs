@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Elasticsearch;
+﻿namespace NetEvolve.HealthPublishers.Elasticsearch;
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -102,7 +102,7 @@ public static class DependencyInjectionExtensions
 
         _ = builder.Services.AddKeyedSingleton(
             name,
-            (IServiceProvider provider, object? key) =>
+            (provider, key) =>
                 CreateClient(
                     provider.GetRequiredService<IOptionsMonitor<ElasticsearchOptions>>().Get((string?)key),
                     configureSettings: configureSettings

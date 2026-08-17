@@ -22,7 +22,7 @@ internal static class ModuleInitializer
 
         VerifierSettings.AutoVerify(includeBuildServer: false, throwException: true);
 
-        Verifier.DerivePathInfo(
+        DerivePathInfo(
             (_, projectDirectory, type, method) =>
             {
                 var directory = Path.Combine(projectDirectory, "_snapshots");

@@ -42,9 +42,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -142,7 +142,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         );
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -151,7 +151,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         // Assert
         var telemetry = channel.LogRecords.Single();
         var duration = TimeSpan.Parse(telemetry.GetAvailabilityAttribute("duration")!, CultureInfo.InvariantCulture);
-        _ = await Assert.That(duration).IsEqualTo(TimeSpan.FromMilliseconds(123));
+        _ = await Assert.That(duration).IsEqualTo(TimeSpan.FromMilliseconds(123L));
     }
 
     [Test]
@@ -229,12 +229,12 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     "all good",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -303,7 +303,7 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
-        var ids = channel.LogRecords.Select(record => record.GetAvailabilityAttribute("id")).ToList();
+        var ids = channel.LogRecords.ConvertAll(record => record.GetAvailabilityAttribute("id"));
         _ = await Assert.That(ids[0]).IsNotEqualTo(ids[1]);
     }
 

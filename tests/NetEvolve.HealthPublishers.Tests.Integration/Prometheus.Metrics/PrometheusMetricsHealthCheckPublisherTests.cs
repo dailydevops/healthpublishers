@@ -27,9 +27,9 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -51,12 +51,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -78,12 +78,12 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["self"] = new HealthReportEntry(
                     HealthStatus.Unhealthy,
                     "boom",
-                    TimeSpan.FromMilliseconds(5),
+                    TimeSpan.FromMilliseconds(5L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -105,7 +105,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null,
                     tags: ["db", "sql"]
@@ -113,13 +113,13 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null,
                     tags: ["cache"]
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -145,7 +145,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -191,7 +191,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
 
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -282,13 +282,13 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
                 entries[check] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(1),
+                    TimeSpan.FromMilliseconds(1L),
                     null,
                     null
                 );
             }
 
-            var report = new HealthReport(entries, TimeSpan.FromMilliseconds(1));
+            var report = new HealthReport(entries, TimeSpan.FromMilliseconds(1L));
             await publisher.PublishAsync(report, cancellationToken);
         }
 
@@ -314,7 +314,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     private static readonly Regex LastPublishTimestampLine = new(
         @"^healthcheck_last_publish_timestamp_seconds\{[^}]*\} \d+$",
         RegexOptions.Multiline | RegexOptions.Compiled,
-        TimeSpan.FromSeconds(1)
+        TimeSpan.FromSeconds(1L)
     );
 
     private static async Task<string> ExportAsTextAsync(
@@ -324,7 +324,7 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var stream = new MemoryStream();
+        await using var stream = new MemoryStream();
         await registry.CollectAndExportAsTextAsync(stream, cancellationToken);
         return Encoding.UTF8.GetString(stream.ToArray());
     }

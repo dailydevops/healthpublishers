@@ -41,9 +41,9 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(status, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -69,7 +69,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -77,7 +77,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         // Act
         await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // improvement, starts timer
-        timeProvider.Advance(TimeSpan.FromMinutes(5));
+        timeProvider.Advance(TimeSpan.FromMinutes(5L));
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // sustained, sends
 
         // Assert
@@ -194,12 +194,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(120)
+            TimeSpan.FromMilliseconds(120L)
         );
 
         // Act
@@ -228,7 +228,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
             HealthStatus.Unhealthy,
-            TimeSpan.FromMilliseconds(42)
+            TimeSpan.FromMilliseconds(42L)
         );
 
         // Act
@@ -255,10 +255,10 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var report = new HealthReport(
             new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
             {
-                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5), null, null),
+                ["self"] = new HealthReportEntry(HealthStatus.Healthy, null, TimeSpan.FromMilliseconds(5L), null, null),
             },
             HealthStatus.Unhealthy,
-            TimeSpan.FromMilliseconds(5)
+            TimeSpan.FromMilliseconds(5L)
         );
 
         // Act
@@ -291,19 +291,19 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 ["database"] = new HealthReportEntry(
                     HealthStatus.Healthy,
                     null,
-                    TimeSpan.FromMilliseconds(3),
+                    TimeSpan.FromMilliseconds(3L),
                     null,
                     null
                 ),
                 ["cache"] = new HealthReportEntry(
                     HealthStatus.Degraded,
                     "slow response",
-                    TimeSpan.FromMilliseconds(120),
+                    TimeSpan.FromMilliseconds(120L),
                     null,
                     null
                 ),
             },
-            TimeSpan.FromMilliseconds(123)
+            TimeSpan.FromMilliseconds(123L)
         );
 
         // Act
@@ -345,12 +345,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
             entries[$"check-{i}"] = new HealthReportEntry(
                 HealthStatus.Healthy,
                 new string('x', 100),
-                TimeSpan.FromMilliseconds(1),
+                TimeSpan.FromMilliseconds(1L),
                 null,
                 null
             );
         }
-        var report = new HealthReport(entries, HealthStatus.Unhealthy, TimeSpan.FromMilliseconds(200));
+        var report = new HealthReport(entries, HealthStatus.Unhealthy, TimeSpan.FromMilliseconds(200L));
 
         // Act
         await publisher.PublishAsync(report, cancellationToken);
@@ -408,7 +408,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -430,7 +430,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -452,7 +452,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -475,14 +475,14 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
 
         // Act
         await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
-        timeProvider.Advance(TimeSpan.FromMinutes(4));
+        timeProvider.Advance(TimeSpan.FromMinutes(4L));
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // improvement, not yet due
 
         // Assert
@@ -499,7 +499,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -507,7 +507,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         // Act
         await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // improvement, starts timer
-        timeProvider.Advance(TimeSpan.FromMinutes(5));
+        timeProvider.Advance(TimeSpan.FromMinutes(5L));
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // pending window elapsed, sends
 
         // Assert
@@ -524,7 +524,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -533,7 +533,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
         await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // improvement, starts timer
         await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // matches last-notified, cancels pending
-        timeProvider.Advance(TimeSpan.FromMinutes(10)); // well past the delay
+        timeProvider.Advance(TimeSpan.FromMinutes(10L)); // well past the delay
         await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // fresh pending timer starting now, not due yet
 
         // Assert
@@ -550,7 +550,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
@@ -558,9 +558,9 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         // Act
         await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
         await publisher.PublishAsync(CreateReport(HealthStatus.Degraded), cancellationToken); // improvement, timer starts at t0
-        timeProvider.Advance(TimeSpan.FromMinutes(1));
+        timeProvider.Advance(TimeSpan.FromMinutes(1L));
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // still an improvement, timer origin unchanged
-        timeProvider.Advance(TimeSpan.FromMinutes(4)); // total elapsed from t0 is now exactly the delay
+        timeProvider.Advance(TimeSpan.FromMinutes(4L)); // total elapsed from t0 is now exactly the delay
         await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // sends, proving the timer origin stayed at t0
 
         // Assert
@@ -577,7 +577,7 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
         var optionsMonitor = CreateOptionsMonitor(options =>
-            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5)
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
         );
         var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
         var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);

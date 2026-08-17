@@ -12,7 +12,13 @@ internal sealed class PrometheusMetricsHealthCheckPublisher : IHealthCheckPublis
     private readonly IOptionsMonitor<PrometheusMetricsOptions> _options;
     private readonly PrometheusMetricsInstruments _instruments;
     private readonly TimeProvider _timeProvider;
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _lock = new();
+#else
     private readonly object _lock = new();
+#endif
+
     private HashSet<(string Check, string Description)> _knownEntries = [];
 
     public PrometheusMetricsHealthCheckPublisher(

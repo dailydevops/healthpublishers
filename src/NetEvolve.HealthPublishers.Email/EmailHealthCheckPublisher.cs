@@ -15,7 +15,12 @@ internal sealed class EmailHealthCheckPublisher : IHealthCheckPublisher
     private readonly ISmtpSender _sender;
     private readonly IOptionsMonitor<EmailOptions> _options;
     private readonly TimeProvider _timeProvider;
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _notificationLock = new();
+#else
     private readonly object _notificationLock = new();
+#endif
 
     private HealthStatus _lastNotifiedStatus = HealthStatus.Healthy;
     private DateTimeOffset? _pendingSince;

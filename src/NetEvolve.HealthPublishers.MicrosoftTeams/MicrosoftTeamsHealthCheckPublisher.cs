@@ -16,7 +16,12 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IOptionsMonitor<MicrosoftTeamsOptions> _options;
     private readonly TimeProvider _timeProvider;
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _notificationLock = new();
+#else
     private readonly object _notificationLock = new();
+#endif
 
     private HealthStatus _lastNotifiedStatus = HealthStatus.Healthy;
     private DateTimeOffset? _pendingSince;

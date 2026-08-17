@@ -76,7 +76,7 @@ internal sealed class EmailOptionsConfigure : IConfigureNamedOptions<EmailOption
             return Fail("The Username and Password must both be set or both be unset.");
         }
 
-        if (options.RecoveryConfirmationDelay < TimeSpan.FromMinutes(5))
+        if (options.RecoveryConfirmationDelay < TimeSpan.FromMinutes(5D))
         {
             return Fail("The RecoveryConfirmationDelay must be at least 5 minutes.");
         }
