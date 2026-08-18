@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Time.Testing;
 using NetEvolve.HealthPublishers.MicrosoftTeams;
+using NetEvolve.HealthPublishers.MicrosoftTeams.Console;
 
 // Set via: dotnet user-secrets set "MicrosoftTeams:WebhookUrl" "https://example.webhook.office.com/webhookb2/..."
 var configuration = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
@@ -20,6 +21,7 @@ if (string.IsNullOrWhiteSpace(webhookUrl))
 var timeProvider = new FakeTimeProvider(DateTimeOffset.UtcNow);
 
 var services = new ServiceCollection();
+services.AddSingleton<IConfiguration>(configuration);
 services
     .AddHealthChecks()
     .AddMicrosoftTeamsPublisher(options =>
@@ -29,6 +31,10 @@ services
         options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L);
     });
 services.AddSingleton<TimeProvider>(timeProvider);
+
+// Logs whenever the publisher actually sends a request, since PublishAsync silently
+// no-ops when RecoveryConfirmationDelay/severity rules suppress a notification.
+services.ConfigureHttpClientDefaults(builder => builder.AddHttpMessageHandler(() => new LoggingHandler()));
 
 var provider = services.BuildServiceProvider();
 var publisher = provider.GetRequiredService<IHealthCheckPublisher>();
@@ -75,6 +81,6 @@ while (true)
 
     await publisher.PublishAsync(report, CancellationToken.None).ConfigureAwait(false);
     Console.WriteLine(
-        $"PublishAsync({status}) called - the card only posts immediately on a worsening status; an improvement waits for RecoveryConfirmationDelay (simulate it with 't')."
+        $"PublishAsync({status}) called - only actually posts to Teams if [SENT] is logged above; otherwise it was suppressed by the worsening/recovery-delay rule."
     );
 }
