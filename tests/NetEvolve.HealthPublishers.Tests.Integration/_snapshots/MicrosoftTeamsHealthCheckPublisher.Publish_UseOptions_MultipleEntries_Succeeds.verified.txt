@@ -8,10 +8,6 @@
     {
       Title: System,
       Value: integration-tests
-    },
-    {
-      Title: Duration,
-      Value: 123ms
     }
   ],
   Title: Health check report: Degraded,

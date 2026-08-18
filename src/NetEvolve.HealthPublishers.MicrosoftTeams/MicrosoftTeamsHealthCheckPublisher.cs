@@ -3,8 +3,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -25,6 +25,8 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
 
     private HealthStatus _lastNotifiedStatus = HealthStatus.Healthy;
     private DateTimeOffset? _pendingSince;
+    private HealthStatus? _currentStatus;
+    private DateTimeOffset _currentStatusSince;
 
     public MicrosoftTeamsHealthCheckPublisher(
         string name,
@@ -44,21 +46,22 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
         cancellationToken.ThrowIfCancellationRequested();
 
         var options = _options.Get(_name);
+        var now = _timeProvider.GetUtcNow();
 
-        if (!ShouldNotify(report.Status, options.RecoveryConfirmationDelay))
+        var (notify, statusSince) = Evaluate(report.Status, options.RecoveryConfirmationDelay, now);
+
+        if (!notify)
         {
             return;
         }
 
-        var now = _timeProvider.GetUtcNow();
-
-        var card = BuildMessage(report, options, now);
+        var card = BuildMessage(report, options, now, statusSince);
 
         using var client = _httpClientFactory.CreateClient(
             $"{DependencyInjectionExtensions.HttpClientNamePrefix}{_name}"
         );
 
-        using var content = new StringContent(JsonSerializer.Serialize(card), Encoding.UTF8, "application/json");
+        using var content = JsonContent.Create(card);
 
         using var response = await client
             .PostAsync(options.WebhookUrl, content, cancellationToken)
@@ -67,10 +70,24 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
         _ = response.EnsureSuccessStatusCode();
     }
 
-    private bool ShouldNotify(HealthStatus newStatus, TimeSpan recoveryConfirmationDelay)
+    private (bool Notify, DateTimeOffset StatusSince) Evaluate(
+        HealthStatus newStatus,
+        TimeSpan recoveryConfirmationDelay,
+        DateTimeOffset now
+    )
     {
         lock (_notificationLock)
         {
+            if (_currentStatus != newStatus)
+            {
+                // Track how long the raw (pre-notification) status has been in effect,
+                // independent of whether a notification for it was actually sent.
+                _currentStatus = newStatus;
+                _currentStatusSince = now;
+            }
+
+            var statusSince = _currentStatusSince;
+
             var newSeverity = Severity(newStatus);
             var lastSeverity = Severity(_lastNotifiedStatus);
 
@@ -78,7 +95,7 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
             {
                 // Status matches the last-notified status: cancel any pending recovery confirmation.
                 _pendingSince = null;
-                return false;
+                return (false, statusSince);
             }
 
             if (newSeverity > lastSeverity)
@@ -86,22 +103,23 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
                 // Worsening: notify immediately and clear any pending recovery confirmation.
                 _lastNotifiedStatus = newStatus;
                 _pendingSince = null;
-                return true;
+                return (true, statusSince);
             }
 
             // Improvement: only notify once sustained for at least the configured delay.
-            var now = _timeProvider.GetUtcNow();
-
             _pendingSince ??= now;
 
             if (now - _pendingSince.Value < recoveryConfirmationDelay)
             {
-                return false;
+                return (false, statusSince);
             }
 
+            // Report since the improvement was first observed, not since the raw status
+            // last changed - that's what "sustained for the delay" actually means here.
+            var confirmedSince = _pendingSince.Value;
             _lastNotifiedStatus = newStatus;
             _pendingSince = null;
-            return true;
+            return (true, confirmedSince);
         }
     }
 
@@ -117,41 +135,65 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
     // recommendation, to avoid excessively large webhook requests when a report has many entries.
     private const int MaxDetailsLength = 4000;
 
-    private static Dictionary<string, object?> BuildMessage(
+    private static object BuildMessage(
         HealthReport report,
         MicrosoftTeamsOptions options,
-        DateTimeOffset now
+        DateTimeOffset now,
+        DateTimeOffset statusSince
     )
     {
-        var color = MapColor(report.Status);
-
         var body = new List<object>
         {
-            new Dictionary<string, object?>
+            new
             {
-                ["type"] = "TextBlock",
-                ["text"] = $"Health check report: {report.Status}",
-                ["weight"] = "Bolder",
-                ["size"] = "Medium",
-                ["color"] = color,
-                ["wrap"] = true,
-            },
-            new Dictionary<string, object?>
-            {
-                ["type"] = "FactSet",
-                ["facts"] = new object[]
+                type = "ColumnSet",
+                columns = new object[]
                 {
-                    new Dictionary<string, object?> { ["title"] = "System", ["value"] = options.SystemIdentifier },
-                    new Dictionary<string, object?> { ["title"] = "Machine", ["value"] = Environment.MachineName },
-                    new Dictionary<string, object?>
+                    new
                     {
-                        ["title"] = "Duration",
-                        ["value"] = string.Create(
-                            CultureInfo.InvariantCulture,
-                            $"{report.TotalDuration.TotalMilliseconds:0.##}ms"
-                        ),
+                        type = "Column",
+                        width = "auto",
+                        verticalContentAlignment = "Center",
+                        items = new object[]
+                        {
+                            new
+                            {
+                                type = "TextBlock",
+                                text = MapIcon(report.Status),
+                                size = "ExtraLarge",
+                                wrap = true,
+                            },
+                        },
                     },
-                    new Dictionary<string, object?> { ["title"] = "Checked at", ["value"] = now.ToString("O") },
+                    new
+                    {
+                        type = "Column",
+                        width = "stretch",
+                        verticalContentAlignment = "Center",
+                        items = new object[]
+                        {
+                            new
+                            {
+                                type = "TextBlock",
+                                text = $"Health check report: {report.Status}",
+                                weight = "Bolder",
+                                size = "Large",
+                                color = MapColor(report.Status),
+                                wrap = true,
+                            },
+                        },
+                    },
+                },
+            },
+            new
+            {
+                type = "FactSet",
+                facts = new object[]
+                {
+                    new { title = "System", value = options.SystemIdentifier },
+                    new { title = "Machine", value = Environment.MachineName },
+                    new { title = "Checked at", value = now.ToString("O") },
+                    new { title = "Since", value = statusSince.ToString("O") },
                 },
             },
         };
@@ -160,24 +202,25 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
         if (!string.IsNullOrEmpty(details))
         {
             body.Add(
-                new Dictionary<string, object?>
+                new
                 {
-                    ["type"] = "TextBlock",
-                    ["text"] = details,
-                    ["wrap"] = true,
+                    type = "TextBlock",
+                    text = details,
+                    wrap = true,
                 }
             );
         }
 
-        return new Dictionary<string, object?>
+        return new
         {
-            ["type"] = "message",
-            ["attachments"] = new object[]
+            type = "message",
+            attachments = new object[]
             {
-                new Dictionary<string, object?>
+                new
                 {
-                    ["contentType"] = "application/vnd.microsoft.card.adaptive",
-                    ["content"] = new Dictionary<string, object?>
+                    contentType = "application/vnd.microsoft.card.adaptive",
+                    // "$schema" isn't a valid anonymous-type member name, so this one level needs a dictionary.
+                    content = new Dictionary<string, object?>
                     {
                         ["$schema"] = "https://adaptivecards.io/schemas/adaptive-card.json",
                         ["type"] = "AdaptiveCard",
@@ -226,5 +269,13 @@ internal sealed class MicrosoftTeamsHealthCheckPublisher : IHealthCheckPublisher
             HealthStatus.Healthy => "good",
             HealthStatus.Degraded => "warning",
             _ => "attention",
+        };
+
+    private static string MapIcon(HealthStatus status) =>
+        status switch
+        {
+            HealthStatus.Healthy => "✅",
+            HealthStatus.Degraded => "⚠️",
+            _ => "❌",
         };
 }

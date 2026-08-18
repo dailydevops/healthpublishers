@@ -361,7 +361,8 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     private static object Normalize(JsonElement content)
     {
         var body = content.GetProperty("body");
-        var titleBlock = body[0];
+        // body[0] is a ColumnSet: icon column, then a title column holding the actual TextBlock.
+        var titleBlock = body[0].GetProperty("columns")[1].GetProperty("items")[0];
         var facts = body[1]
             .GetProperty("facts")
             .EnumerateArray()
@@ -370,8 +371,8 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
                 Title = fact.GetProperty("title").GetString(),
                 Value = fact.GetProperty("value").GetString(),
             })
-            // machine_name and checked-at vary per environment/run and would break the snapshot elsewhere.
-            .Where(fact => fact.Title is not ("Machine" or "Checked at"))
+            // machine name, checked-at, and since all vary per environment/run and would break the snapshot elsewhere.
+            .Where(fact => fact.Title is not ("Machine" or "Checked at" or "Since"))
             .ToArray();
 
         return new

@@ -5,10 +5,6 @@
     {
       Title: System,
       Value: integration-tests
-    },
-    {
-      Title: Duration,
-      Value: 5ms
     }
   ],
   Title: Health check report: Unhealthy,
