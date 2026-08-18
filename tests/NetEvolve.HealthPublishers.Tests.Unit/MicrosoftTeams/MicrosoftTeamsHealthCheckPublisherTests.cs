@@ -590,6 +590,89 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(1);
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCalled_OmitsDurationFact(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory();
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken);
+
+        // Assert
+        var request = factory.Handler.Requests[0];
+        _ = await Assert.That(request.Body).DoesNotContain("\"title\":\"Duration\"");
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenStatusWorsens_SendsSinceFactWithStatusChangeTime(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory();
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
+        var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
+
+        // Act
+        timeProvider.Advance(TimeSpan.FromMinutes(3L)); // status becomes Unhealthy at this point in time
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken);
+
+        // Assert
+        var since = GetFact(factory.Handler.Requests[0].Body!, "Since");
+        _ = await Assert.That(since).IsEqualTo(timeProvider.GetUtcNow().ToString("O"));
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenImprovementConfirmed_SendsSinceFactWithFirstImprovementTime(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory();
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options =>
+            options.RecoveryConfirmationDelay = TimeSpan.FromMinutes(5L)
+        );
+        var timeProvider = new FakeTimeProvider(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero));
+        var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, timeProvider);
+
+        // Act
+        await publisher.PublishAsync(CreateReport(HealthStatus.Unhealthy), cancellationToken); // worsening, sends
+        timeProvider.Advance(TimeSpan.FromMinutes(2L));
+        var firstImprovementSeenAt = timeProvider.GetUtcNow();
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // improvement, starts timer here
+        timeProvider.Advance(TimeSpan.FromMinutes(5L));
+        await publisher.PublishAsync(CreateReport(HealthStatus.Healthy), cancellationToken); // sustained, sends
+
+        // Assert
+        var since = GetFact(factory.Handler.Requests[1].Body!, "Since");
+        _ = await Assert.That(since).IsEqualTo(firstImprovementSeenAt.ToString("O"));
+    }
+
+    private static string? GetFact(string requestBody, string title)
+    {
+        using var document = JsonDocument.Parse(requestBody);
+        var facts = document
+            .RootElement.GetProperty("attachments")[0]
+            .GetProperty("content")
+            .GetProperty("body")[1]
+            .GetProperty("facts");
+        return facts
+            .EnumerateArray()
+            .Single(fact => fact.GetProperty("title").GetString() == title)
+            .GetProperty("value")
+            .GetString();
+    }
+
     private static HealthReport CreateReport(HealthStatus status) =>
         new(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), status, TimeSpan.Zero);
 
