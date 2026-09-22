@@ -1,0 +1,9 @@
+﻿{
+  AttachmentText: Overall status: Healthy, elapsed 5ms.,
+  Color: good,
+  Fields: [
+    System Identifier
+  ],
+  SystemIdentifierValue: integration-tests,
+  Text: Health check report: Healthy
+}

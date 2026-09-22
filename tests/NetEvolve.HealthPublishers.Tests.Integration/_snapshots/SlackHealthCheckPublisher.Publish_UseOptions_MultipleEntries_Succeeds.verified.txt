@@ -1,0 +1,12 @@
+﻿{
+  AttachmentText:
+Overall status: Degraded, elapsed 123ms.
+- *database*: Healthy (3ms)
+- *cache*: Degraded (120ms) - slow response,
+  Color: warning,
+  Fields: [
+    System Identifier
+  ],
+  SystemIdentifierValue: integration-tests,
+  Text: Health check report: Degraded
+}
