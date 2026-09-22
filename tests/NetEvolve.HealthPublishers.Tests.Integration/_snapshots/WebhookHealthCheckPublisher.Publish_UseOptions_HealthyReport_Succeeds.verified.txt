@@ -1,0 +1,12 @@
+﻿{
+  Entries: [
+    {
+      DurationMs: 5.0,
+      Name: self,
+      Status: Healthy
+    }
+  ],
+  Status: Healthy,
+  SystemIdentifier: integration-tests,
+  TotalDurationMs: 5.0
+}

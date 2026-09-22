@@ -1,0 +1,13 @@
+﻿{
+  Entries: [
+    {
+      Description: slow,
+      DurationMs: 5.0,
+      Name: self,
+      Status: Degraded
+    }
+  ],
+  Status: Degraded,
+  SystemIdentifier: integration-tests,
+  TotalDurationMs: 5.0
+}

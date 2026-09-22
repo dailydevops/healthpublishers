@@ -1,0 +1,5 @@
+﻿{
+  Status: Healthy,
+  SystemIdentifier: integration-tests,
+  TotalDurationMs: 5.0
+}
