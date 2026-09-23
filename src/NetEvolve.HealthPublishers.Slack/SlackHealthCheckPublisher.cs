@@ -31,6 +31,8 @@ internal sealed class SlackHealthCheckPublisher : IHealthCheckPublisher
 
     public async Task PublishAsync(HealthReport report, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var options = _options.Get(_name);
 
         var color = MapColor(report.Status);
