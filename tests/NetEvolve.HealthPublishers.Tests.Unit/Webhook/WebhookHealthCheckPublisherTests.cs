@@ -26,8 +26,12 @@ public sealed class WebhookHealthCheckPublisherTests
     [Arguments(HealthStatus.Healthy)]
     [Arguments(HealthStatus.Degraded)]
     [Arguments(HealthStatus.Unhealthy)]
-    public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithMappedStatus(HealthStatus status)
+    public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithMappedStatus(
+        HealthStatus status,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -42,7 +46,7 @@ public sealed class WebhookHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -54,8 +58,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsSystemIdentifierAndMachineName()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsSystemIdentifierAndMachineName(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -64,7 +71,7 @@ public sealed class WebhookHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -76,8 +83,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenHeadersProvided_SendsHeadersWithRequest()
+    public async Task PublishAsync_WhenHeadersProvided_SendsHeadersWithRequest(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -86,7 +96,7 @@ public sealed class WebhookHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -94,8 +104,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenNoHeadersProvided_SendsRequestWithoutCustomHeaders()
+    public async Task PublishAsync_WhenNoHeadersProvided_SendsRequestWithoutCustomHeaders(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -104,7 +117,7 @@ public sealed class WebhookHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -112,8 +125,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -123,7 +139,7 @@ public sealed class WebhookHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -133,8 +149,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInPayload()
+    public async Task PublishAsync_WhenReportHasEntries_IncludesEntryDetailsInPayload(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -156,7 +175,7 @@ public sealed class WebhookHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -175,8 +194,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsEmptyEntriesArray()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsEmptyEntriesArray(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
@@ -188,7 +210,7 @@ public sealed class WebhookHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -201,8 +223,11 @@ public sealed class WebhookHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenResponseIsNotSuccessful_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenResponseIsNotSuccessful_ThrowsHttpRequestException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.InternalServerError);
@@ -211,7 +236,7 @@ public sealed class WebhookHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, CancellationToken.None);
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);

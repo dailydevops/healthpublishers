@@ -28,9 +28,11 @@ public sealed class SlackHealthCheckPublisherTests
     [Arguments(HealthStatus.Unhealthy, "danger")]
     public async Task PublishAsync_WhenReportHasStatus_SendsRequestWithMappedColor(
         HealthStatus status,
-        string expectedColor
+        string expectedColor,
+        CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -45,7 +47,7 @@ public sealed class SlackHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -57,8 +59,11 @@ public sealed class SlackHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierFields()
+    public async Task PublishAsync_WhenSystemIdentifierProvided_SendsMachineNameAndSystemIdentifierFields(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -67,7 +72,7 @@ public sealed class SlackHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -79,8 +84,11 @@ public sealed class SlackHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp()
+    public async Task PublishAsync_WhenCalled_UsesTimeProviderForTimestamp(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -90,7 +98,7 @@ public sealed class SlackHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -98,8 +106,11 @@ public sealed class SlackHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryText()
+    public async Task PublishAsync_WhenReportHasNoEntries_SendsPlainSummaryText(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -111,7 +122,7 @@ public sealed class SlackHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -121,8 +132,11 @@ public sealed class SlackHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator()
+    public async Task PublishAsync_WhenEntryHasNoDescription_OmitsDescriptionSeparator(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -137,7 +151,7 @@ public sealed class SlackHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -151,8 +165,11 @@ public sealed class SlackHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLine()
+    public async Task PublishAsync_WhenReportHasMultipleEntries_ListsEachEntryOnItsOwnLine(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
@@ -180,7 +197,7 @@ public sealed class SlackHealthCheckPublisherTests
         );
 
         // Act
-        await publisher.PublishAsync(report, CancellationToken.None);
+        await publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         var request = factory.Handler.Requests[0];
@@ -200,8 +217,11 @@ public sealed class SlackHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenResponseIsNotSuccessful_ThrowsHttpRequestException()
+    public async Task PublishAsync_WhenResponseIsNotSuccessful_ThrowsHttpRequestException(
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.InternalServerError);
@@ -210,7 +230,7 @@ public sealed class SlackHealthCheckPublisherTests
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
 
         // Act
-        Task Act() => publisher.PublishAsync(report, CancellationToken.None);
+        Task Act() => publisher.PublishAsync(report, cancellationToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
