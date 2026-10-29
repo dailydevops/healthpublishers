@@ -275,6 +275,28 @@ public sealed class SplunkHealthCheckPublisherTests
         _ = await Assert.That(caught).IsNotNull();
     }
 
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
+        using var handler = new MockHttpHandler();
+        _ = handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new SplunkHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
+    }
+
     private static IOptionsMonitor<SplunkOptions> CreateOptionsMonitor(Action<SplunkOptions> configure)
     {
         var services = new ServiceCollection();

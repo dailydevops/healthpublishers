@@ -470,6 +470,28 @@ public sealed class OpsgenieHealthCheckPublisherTests
         }
     }
 
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
+        using var handler = new MockHttpHandler();
+        _ = handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new OpsgenieHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
+    }
+
     private static IOptionsMonitor<OpsgenieOptions> CreateOptionsMonitor(Action<OpsgenieOptions> configure)
     {
         var services = new ServiceCollection();

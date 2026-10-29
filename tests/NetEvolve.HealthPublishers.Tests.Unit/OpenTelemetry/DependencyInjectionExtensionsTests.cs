@@ -59,7 +59,7 @@ public sealed class DependencyInjectionExtensionsTests
     }
 
     [Test]
-    public void AddOpenTelemetryPublisher_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
+    public async Task AddOpenTelemetryPublisher_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
     {
         // Arrange
         var configuration = new ConfigurationBuilder().Build();
@@ -71,7 +71,8 @@ public sealed class DependencyInjectionExtensionsTests
         void Act() => builder.AddOpenTelemetryPublisher(name).AddOpenTelemetryPublisher(name);
 
         // Assert
-        _ = Assert.Throws<ArgumentException>(nameof(name), Act);
+        var exception = Assert.Throws<ArgumentException>(nameof(name), Act);
+        _ = await Assert.That(exception.Message).Contains("Name `Test` already in use.");
     }
 
     [Test]

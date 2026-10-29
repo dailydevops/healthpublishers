@@ -58,7 +58,7 @@ public sealed class DependencyInjectionExtensionsTests
     }
 
     [Test]
-    public void AddApplicationInsightsPublisher_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
+    public async Task AddApplicationInsightsPublisher_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
     {
         // Arrange
         var configuration = new ConfigurationBuilder().Build();
@@ -70,7 +70,8 @@ public sealed class DependencyInjectionExtensionsTests
         void Act() => builder.AddApplicationInsightsPublisher(name).AddApplicationInsightsPublisher(name);
 
         // Assert
-        _ = Assert.Throws<ArgumentException>(nameof(name), Act);
+        var exception = Assert.Throws<ArgumentException>(nameof(name), Act);
+        _ = await Assert.That(exception.Message).Contains("Name `Test` already in use.");
     }
 
     [Test]
