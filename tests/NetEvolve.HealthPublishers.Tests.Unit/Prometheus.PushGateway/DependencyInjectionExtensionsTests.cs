@@ -60,7 +60,7 @@ public sealed class DependencyInjectionExtensionsTests
     }
 
     [Test]
-    public void AddPrometheusPushGateway_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
+    public async Task AddPrometheusPushGateway_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
     {
         // Arrange
         var configuration = new ConfigurationBuilder().Build();
@@ -72,7 +72,8 @@ public sealed class DependencyInjectionExtensionsTests
         void Act() => builder.AddPrometheusPushGateway(name).AddPrometheusPushGateway(name);
 
         // Assert
-        _ = Assert.Throws<ArgumentException>(nameof(name), Act);
+        var exception = Assert.Throws<ArgumentException>(nameof(name), Act);
+        _ = await Assert.That(exception.Message).Contains("Name `Test` already in use.");
     }
 
     [Test]
@@ -164,6 +165,35 @@ public sealed class DependencyInjectionExtensionsTests
             .GetServices<IHealthCheckPublisher>()
             .OfType<PrometheusPushGatewayHealthCheckPublisher>();
         _ = await Assert.That(publishers.Count()).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task AddPrometheusPushGateway_WhenCalled_RegistersHttpClientUnderPrefixedName()
+    {
+        // Arrange
+        var configuration = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
+        const string? name = "Test";
+        _ = builder.AddPrometheusPushGateway(
+            name,
+            options =>
+            {
+                options.Instance = "checkout-service-01";
+                options.SystemIdentifier = "checkout-service";
+                options.Job = "checkout-service";
+                options.ServerUrl = new Uri("https://pushgateway.example.com");
+            }
+        );
+        var provider = services.BuildServiceProvider();
+
+        // Act
+        using var client = provider
+            .GetRequiredService<IHttpClientFactory>()
+            .CreateClient($"{DependencyInjectionExtensions.HttpClientNamePrefix}{name}");
+
+        // Assert
+        _ = await Assert.That(client.BaseAddress).IsEqualTo(new Uri("https://pushgateway.example.com"));
     }
 
     [Test]

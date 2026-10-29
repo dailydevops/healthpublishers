@@ -15,6 +15,7 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Prometheus.PushGateway;
 using TUnit.Mocks;
+using TUnit.Mocks.Http;
 
 [TestGroup($"{nameof(Prometheus)}.{nameof(PushGateway)}")]
 public sealed class PrometheusPushGatewayHealthCheckPublisherTests
@@ -519,6 +520,35 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
         _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
+        using var handler = new MockHttpHandler();
+        _ = handler
+            .OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new PrometheusPushGatewayHealthCheckPublisher(
+            TestName,
+            factory,
+            optionsMonitor,
+            TimeProvider.System
+        );
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
     }
 
     private static IOptionsMonitor<PrometheusPushGatewayOptions> CreateOptionsMonitor(
