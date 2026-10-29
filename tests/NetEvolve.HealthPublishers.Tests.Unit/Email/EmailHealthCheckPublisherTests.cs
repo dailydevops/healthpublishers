@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Email;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Email;
 
 using System;
 using System.Collections.Generic;
@@ -597,17 +597,21 @@ public sealed class EmailHealthCheckPublisherTests
     private static string GetTextBody(MimeMessage message) => ((TextPart)message.Body!).Text ?? string.Empty;
 
     [Test]
-    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
     {
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options => { });
         var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
         var report = CreateReport(HealthStatus.Unhealthy);
-        var cancellationToken = new CancellationToken(true);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);

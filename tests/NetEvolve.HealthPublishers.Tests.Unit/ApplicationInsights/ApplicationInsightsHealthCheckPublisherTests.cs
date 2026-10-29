@@ -315,7 +315,9 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
     {
         // Arrange
         var channel = new TestTelemetryChannel();
@@ -329,10 +331,12 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
             TimeProvider.System
         );
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
-        var cancellationToken = new CancellationToken(true);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);

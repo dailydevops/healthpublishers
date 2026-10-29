@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Seq;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Seq;
 
 using System;
 using System.Collections.Generic;
@@ -131,7 +131,9 @@ public sealed class SeqHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing(
+        CancellationToken cancellationToken = default
+    )
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
@@ -139,10 +141,12 @@ public sealed class SeqHealthCheckPublisherTests
         var optionsMonitor = CreateOptionsMonitor(options => options.ServerUrl = new Uri("https://seq.example.com"));
         var publisher = new SeqHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
-        var cancellationToken = new CancellationToken(true);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);

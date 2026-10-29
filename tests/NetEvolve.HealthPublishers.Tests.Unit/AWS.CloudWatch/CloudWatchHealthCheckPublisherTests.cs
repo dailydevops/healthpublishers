@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.AWS.CloudWatch;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.AWS.CloudWatch;
 
 using System;
 using System.Collections.Generic;
@@ -337,16 +337,20 @@ public sealed class CloudWatchHealthCheckPublisherTests
     }
 
     [Test]
-    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
     {
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);
         var report = EmptyReport();
-        var cancellationToken = new CancellationToken(true);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);

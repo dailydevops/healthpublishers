@@ -490,7 +490,9 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     private static string Labels() => $"system_identifier=\"test-system\",machine_name=\"{Environment.MachineName}\"";
 
     [Test]
-    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing(
+        CancellationToken cancellationToken = default
+    )
     {
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
@@ -505,10 +507,12 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
             TimeProvider.System
         );
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
-        var cancellationToken = new CancellationToken(true);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
 
         // Act
-        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
 
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
