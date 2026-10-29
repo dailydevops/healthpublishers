@@ -336,6 +336,23 @@ public sealed class CloudWatchHealthCheckPublisherTests
         );
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    {
+        // Arrange
+        var mock = CreateMock();
+        var publisher = CreatePublisher(mock);
+        var report = EmptyReport();
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(Mock.Invocations(mock).Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<CloudWatchOptions> CreateOptionsMonitor(Action<CloudWatchOptions> configure)
     {
         var services = new ServiceCollection();

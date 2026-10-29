@@ -596,6 +596,24 @@ public sealed class EmailHealthCheckPublisherTests
 
     private static string GetTextBody(MimeMessage message) => ((TextPart)message.Body!).Text ?? string.Empty;
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    {
+        // Arrange
+        var mock = ISmtpSender.Mock();
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new EmailHealthCheckPublisher(TestName, mock, optionsMonitor, TimeProvider.System);
+        var report = CreateReport(HealthStatus.Unhealthy);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        mock.SendAsync(Any(), Any(), Any()).WasCalled(Times.Never);
+    }
+
     private static IOptionsMonitor<EmailOptions> CreateOptionsMonitor(Action<EmailOptions> configure)
     {
         var services = new ServiceCollection();

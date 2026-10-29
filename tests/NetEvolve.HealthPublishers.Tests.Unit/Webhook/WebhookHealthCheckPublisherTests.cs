@@ -242,6 +242,25 @@ public sealed class WebhookHealthCheckPublisherTests
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
+        _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new WebhookHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<WebhookOptions> CreateOptionsMonitor(Action<WebhookOptions> configure)
     {
         var services = new ServiceCollection();

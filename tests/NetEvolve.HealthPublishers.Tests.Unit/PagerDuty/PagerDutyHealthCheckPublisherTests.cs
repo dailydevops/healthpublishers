@@ -285,6 +285,25 @@ public sealed class PagerDutyHealthCheckPublisherTests
         _ = await Assert.ThrowsAsync<HttpRequestException>(() => Act(cancellationToken));
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
+        _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new PagerDutyHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<PagerDutyOptions> CreateOptionsMonitor(Action<PagerDutyOptions> configure)
     {
         var services = new ServiceCollection();

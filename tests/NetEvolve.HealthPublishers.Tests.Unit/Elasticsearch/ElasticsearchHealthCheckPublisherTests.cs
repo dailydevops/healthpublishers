@@ -322,6 +322,23 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         return (publisher, client);
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    {
+        // Arrange
+        var handler = CreateSuccessHandler();
+        var (publisher, _) = CreatePublisher(handler);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<ElasticsearchOptions> CreateOptionsMonitor(Action<ElasticsearchOptions> configure)
     {
         var services = new ServiceCollection();

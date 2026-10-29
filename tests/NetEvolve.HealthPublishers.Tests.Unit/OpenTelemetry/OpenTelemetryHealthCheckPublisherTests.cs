@@ -151,6 +151,31 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
             .IsEqualTo("2026-01-02T03:04:05.0000000+00:00");
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    {
+        // Arrange
+        using var meter = new Meter(DependencyInjectionExtensions.MeterName);
+        var instruments = new OpenTelemetryInstruments(meter);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new OpenTelemetryHealthCheckPublisher(
+            TestName,
+            optionsMonitor,
+            instruments,
+            TimeProvider.System
+        );
+        using var measurements = new MeasurementRecorder(meter, "healthchecks.report.duration");
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(measurements.Values.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<OpenTelemetryOptions> CreateOptionsMonitor(Action<OpenTelemetryOptions> configure)
     {
         var services = new ServiceCollection();

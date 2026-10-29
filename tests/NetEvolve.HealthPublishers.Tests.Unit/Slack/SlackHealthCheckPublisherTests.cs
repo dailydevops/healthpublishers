@@ -236,6 +236,25 @@ public sealed class SlackHealthCheckPublisherTests
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new SlackHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<SlackOptions> CreateOptionsMonitor(Action<SlackOptions> configure)
     {
         var services = new ServiceCollection();

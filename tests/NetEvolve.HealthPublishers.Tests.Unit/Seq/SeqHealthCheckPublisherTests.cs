@@ -130,6 +130,25 @@ public sealed class SeqHealthCheckPublisherTests
         _ = await Assert.That(request.Body).Contains("\"@t\":\"2026-01-02T03:04:05.0000000\\u002B00:00\"");
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
+        _ = factory.Handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);
+        var optionsMonitor = CreateOptionsMonitor(options => options.ServerUrl = new Uri("https://seq.example.com"));
+        var publisher = new SeqHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<SeqOptions> CreateOptionsMonitor(Action<SeqOptions> configure)
     {
         var services = new ServiceCollection();

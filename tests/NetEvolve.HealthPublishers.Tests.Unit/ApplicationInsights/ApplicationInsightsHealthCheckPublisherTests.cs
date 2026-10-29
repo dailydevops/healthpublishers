@@ -314,6 +314,31 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         return configuration;
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish()
+    {
+        // Arrange
+        var channel = new TestTelemetryChannel();
+        using var configuration = CreateTelemetryConfiguration(channel);
+        var client = new TelemetryClient(configuration);
+        var optionsMonitor = CreateOptionsMonitor(_ => { });
+        var publisher = new ApplicationInsightsHealthCheckPublisher(
+            TestName,
+            () => client,
+            optionsMonitor,
+            TimeProvider.System
+        );
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(channel.LogRecords.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<ApplicationInsightsOptions> CreateOptionsMonitor(
         Action<ApplicationInsightsOptions> configure
     )

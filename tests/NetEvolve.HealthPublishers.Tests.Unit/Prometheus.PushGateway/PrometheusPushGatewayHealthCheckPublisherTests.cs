@@ -489,6 +489,32 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
 
     private static string Labels() => $"system_identifier=\"test-system\",machine_name=\"{Environment.MachineName}\"";
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
+        _ = factory
+            .Handler.OnPut("/metrics/job/checkout-service/instance/checkout-service-01")
+            .Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new PrometheusPushGatewayHealthCheckPublisher(
+            TestName,
+            factory,
+            optionsMonitor,
+            TimeProvider.System
+        );
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        var cancellationToken = new CancellationToken(true);
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
     private static IOptionsMonitor<PrometheusPushGatewayOptions> CreateOptionsMonitor(
         Action<PrometheusPushGatewayOptions> configure
     )
