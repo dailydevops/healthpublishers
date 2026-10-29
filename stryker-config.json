@@ -9,7 +9,7 @@
       "tests/NetEvolve.HealthPublishers.Tests.Architecture/NetEvolve.HealthPublishers.Tests.Architecture.csproj",
       "tests/NetEvolve.HealthPublishers.Tests.Unit/NetEvolve.HealthPublishers.Tests.Unit.csproj"
     ],
-    "coverage-analysis": "perTest",
+    "coverage-analysis": "all",
     "mutate": ["**/*.cs", "!**/*.Designer.cs", "!**/*.g.cs", "!**/*.g.i.cs"],
     "configuration": "Mutation",
     "test-runner": "mtp"
