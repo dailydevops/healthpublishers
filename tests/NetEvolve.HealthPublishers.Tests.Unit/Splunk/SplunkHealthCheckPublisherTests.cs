@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Splunk;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Splunk;
 
 using System;
 using System.Collections.Generic;
@@ -273,6 +273,31 @@ public sealed class SplunkHealthCheckPublisherTests
 
         // Assert
         _ = await Assert.That(caught).IsNotNull();
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
+        _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new SplunkHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
     }
 
     private static IOptionsMonitor<SplunkOptions> CreateOptionsMonitor(Action<SplunkOptions> configure)

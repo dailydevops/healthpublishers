@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Slack;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Slack;
 
 using System;
 using System.Collections.Generic;
@@ -234,6 +234,31 @@ public sealed class SlackHealthCheckPublisherTests
 
         // Assert
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndSendsNothing(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new SlackHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
     }
 
     private static IOptionsMonitor<SlackOptions> CreateOptionsMonitor(Action<SlackOptions> configure)

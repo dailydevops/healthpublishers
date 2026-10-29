@@ -470,6 +470,100 @@ public sealed class OpsgenieHealthCheckPublisherTests
         }
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
+        _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new OpsgenieHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancelledBeforeCreateAlert_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
+        _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);
+        using var cts = new CancellationTokenSource();
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new OpsgenieHealthCheckPublisher(
+            TestName,
+            new CancellingHttpClientFactory(factory, cts),
+            optionsMonitor,
+            TimeProvider.System
+        );
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Unhealthy,
+            TimeSpan.Zero
+        );
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cts.Token);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancelledBeforeCloseAlert_ThrowsAndSendsNothing()
+    {
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
+        _ = factory
+            .Handler.OnPost("/v2/alerts/healthpublishers%3Atest-system/close?identifierType=alias")
+            .Respond(HttpStatusCode.Accepted);
+        using var cts = new CancellationTokenSource();
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new OpsgenieHealthCheckPublisher(
+            TestName,
+            new CancellingHttpClientFactory(factory, cts),
+            optionsMonitor,
+            TimeProvider.System
+        );
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal),
+            HealthStatus.Healthy,
+            TimeSpan.Zero
+        );
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, cts.Token);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
+    // Cancels the token once the publisher has passed its own entry guard, i.e. while it fetches the client.
+    private sealed class CancellingHttpClientFactory(IHttpClientFactory inner, CancellationTokenSource cts)
+        : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name)
+        {
+            cts.Cancel();
+            return inner.CreateClient(name);
+        }
+    }
+
     private static IOptionsMonitor<OpsgenieOptions> CreateOptionsMonitor(Action<OpsgenieOptions> configure)
     {
         var services = new ServiceCollection();

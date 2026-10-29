@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.Elasticsearch;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.Elasticsearch;
 
 using System;
 using System.Collections.Generic;
@@ -320,6 +320,29 @@ public sealed class ElasticsearchHealthCheckPublisherTests
             timeProvider ?? TimeProvider.System
         );
         return (publisher, client);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        var handler = CreateSuccessHandler();
+        var (publisher, _) = CreatePublisher(handler);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(0);
     }
 
     private static IOptionsMonitor<ElasticsearchOptions> CreateOptionsMonitor(Action<ElasticsearchOptions> configure)
