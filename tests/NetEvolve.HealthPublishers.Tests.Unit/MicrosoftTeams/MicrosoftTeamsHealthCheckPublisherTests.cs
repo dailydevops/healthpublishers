@@ -831,6 +831,40 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     private static HealthReport CreateReport(HealthStatus status) =>
         new(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), status, TimeSpan.Zero);
 
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory();
+        using var handler = new MockHttpHandler();
+        _ = handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["self"] = new HealthReportEntry(
+                    HealthStatus.Degraded,
+                    null,
+                    TimeSpan.FromMilliseconds(5L),
+                    null,
+                    null
+                ),
+            },
+            TimeSpan.FromMilliseconds(42L)
+        );
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
+    }
+
     private static IOptionsMonitor<MicrosoftTeamsOptions> CreateOptionsMonitor(Action<MicrosoftTeamsOptions> configure)
     {
         var services = new ServiceCollection();

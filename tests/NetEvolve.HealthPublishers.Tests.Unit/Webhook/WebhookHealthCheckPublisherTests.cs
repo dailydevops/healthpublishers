@@ -242,6 +242,28 @@ public sealed class WebhookHealthCheckPublisherTests
         _ = await Assert.ThrowsAsync<HttpRequestException>(Act);
     }
 
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
+        using var handler = new MockHttpHandler();
+        _ = handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new WebhookHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
+    }
+
     private static IOptionsMonitor<WebhookOptions> CreateOptionsMonitor(Action<WebhookOptions> configure)
     {
         var services = new ServiceCollection();

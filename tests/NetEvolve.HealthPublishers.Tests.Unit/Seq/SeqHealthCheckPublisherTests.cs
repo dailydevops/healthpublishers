@@ -12,6 +12,7 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Seq;
 using TUnit.Mocks;
+using TUnit.Mocks.Http;
 
 [TestGroup(nameof(Seq))]
 public sealed class SeqHealthCheckPublisherTests
@@ -128,6 +129,28 @@ public sealed class SeqHealthCheckPublisherTests
         // Assert
         var request = factory.Handler.Requests[0];
         _ = await Assert.That(request.Body).Contains("\"@t\":\"2026-01-02T03:04:05.0000000\\u002B00:00\"");
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
+        using var handler = new MockHttpHandler();
+        _ = handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => options.ServerUrl = new Uri("https://seq.example.com"));
+        var publisher = new SeqHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
     }
 
     private static IOptionsMonitor<SeqOptions> CreateOptionsMonitor(Action<SeqOptions> configure)
