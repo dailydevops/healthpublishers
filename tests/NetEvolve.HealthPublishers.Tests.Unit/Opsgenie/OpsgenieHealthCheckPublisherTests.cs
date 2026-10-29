@@ -475,6 +475,8 @@ public sealed class OpsgenieHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.opsgenie.com");
         _ = factory.Handler.OnPost("/v2/alerts").Respond(HttpStatusCode.Accepted);

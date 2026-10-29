@@ -601,6 +601,8 @@ public sealed class EmailHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var mock = ISmtpSender.Mock();
         var optionsMonitor = CreateOptionsMonitor(options => { });

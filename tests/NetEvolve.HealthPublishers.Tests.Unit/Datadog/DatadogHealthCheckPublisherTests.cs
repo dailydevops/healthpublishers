@@ -324,6 +324,8 @@ public sealed class DatadogHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
         _ = factory.Handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);

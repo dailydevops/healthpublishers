@@ -135,6 +135,8 @@ public sealed class SeqHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://seq.example.com");
         _ = factory.Handler.OnPost("/ingest/clef").Respond(HttpStatusCode.Created);

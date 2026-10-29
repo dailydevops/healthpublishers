@@ -241,6 +241,8 @@ public sealed class SlackHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress($"https://hooks.slack.com{WebhookPath}");
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);

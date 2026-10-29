@@ -341,6 +341,8 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var (publisher, instruments, _) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
         var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);

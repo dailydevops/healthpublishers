@@ -319,6 +319,8 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var channel = new TestTelemetryChannel();
         using var configuration = CreateTelemetryConfiguration(channel);

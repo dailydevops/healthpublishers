@@ -247,6 +247,8 @@ public sealed class WebhookHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://example.com");
         _ = factory.Handler.OnPost("/webhooks/health").Respond(HttpStatusCode.OK);

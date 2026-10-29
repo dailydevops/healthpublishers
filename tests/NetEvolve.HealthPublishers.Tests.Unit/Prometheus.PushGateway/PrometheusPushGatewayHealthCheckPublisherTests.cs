@@ -494,6 +494,8 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://pushgateway.example.com");
         _ = factory

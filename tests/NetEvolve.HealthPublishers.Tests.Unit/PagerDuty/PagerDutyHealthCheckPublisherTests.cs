@@ -290,6 +290,8 @@ public sealed class PagerDutyHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://events.pagerduty.com");
         _ = factory.Handler.OnPost("/v2/enqueue").Respond(HttpStatusCode.Accepted);

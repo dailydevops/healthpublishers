@@ -681,6 +681,8 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory();
         _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);

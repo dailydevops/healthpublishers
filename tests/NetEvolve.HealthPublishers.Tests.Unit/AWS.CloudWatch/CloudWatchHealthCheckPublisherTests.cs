@@ -341,6 +341,8 @@ public sealed class CloudWatchHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var mock = CreateMock();
         var publisher = CreatePublisher(mock);

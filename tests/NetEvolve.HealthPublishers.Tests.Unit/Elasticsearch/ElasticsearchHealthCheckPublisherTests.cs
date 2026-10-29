@@ -327,6 +327,8 @@ public sealed class ElasticsearchHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         var handler = CreateSuccessHandler();
         var (publisher, _) = CreatePublisher(handler);

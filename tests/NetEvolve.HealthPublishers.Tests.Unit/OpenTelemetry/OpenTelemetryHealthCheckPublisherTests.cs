@@ -156,6 +156,8 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var meter = new Meter(DependencyInjectionExtensions.MeterName);
         var instruments = new OpenTelemetryInstruments(meter);

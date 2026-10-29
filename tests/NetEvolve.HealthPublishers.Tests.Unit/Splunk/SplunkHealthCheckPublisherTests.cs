@@ -280,6 +280,8 @@ public sealed class SplunkHealthCheckPublisherTests
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Arrange
         using var factory = Mock.HttpClientFactory().WithBaseAddress("https://splunk.example.com:8088");
         _ = factory.Handler.OnPost("/services/collector/event").Respond(HttpStatusCode.OK);
