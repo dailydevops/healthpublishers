@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -374,6 +375,160 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
             {
                 _ = await Assert.That(line).Contains(new string('x', 100));
             }
+        }
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCalled_SendsExactAdaptiveCardPayload(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory();
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => options.SystemIdentifier = "checkout-service");
+        var now = new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero);
+        var publisher = new MicrosoftTeamsHealthCheckPublisher(
+            TestName,
+            factory,
+            optionsMonitor,
+            new FakeTimeProvider(now)
+        );
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+            {
+                ["database"] = new HealthReportEntry(
+                    HealthStatus.Unhealthy,
+                    "down",
+                    TimeSpan.FromMilliseconds(3L),
+                    null,
+                    null
+                ),
+            },
+            HealthStatus.Unhealthy,
+            TimeSpan.FromMilliseconds(3L)
+        );
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        var expected = JsonNode.Parse(
+            $$"""
+            {
+              "type": "message",
+              "attachments": [
+                {
+                  "contentType": "application/vnd.microsoft.card.adaptive",
+                  "content": {
+                    "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+                    "type": "AdaptiveCard",
+                    "version": "1.4",
+                    "body": [
+                      {
+                        "type": "ColumnSet",
+                        "columns": [
+                          {
+                            "type": "Column",
+                            "width": "auto",
+                            "verticalContentAlignment": "Center",
+                            "items": [
+                              { "type": "TextBlock", "text": "❌", "size": "ExtraLarge", "wrap": true }
+                            ]
+                          },
+                          {
+                            "type": "Column",
+                            "width": "stretch",
+                            "verticalContentAlignment": "Center",
+                            "items": [
+                              {
+                                "type": "TextBlock",
+                                "text": "Health check report: Unhealthy",
+                                "weight": "Bolder",
+                                "size": "Large",
+                                "color": "attention",
+                                "wrap": true
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "FactSet",
+                        "facts": [
+                          { "title": "System", "value": "checkout-service" },
+                          { "title": "Machine", "value": {{JsonSerializer.Serialize(Environment.MachineName)}} },
+                          { "title": "Checked at", "value": "{{now:O}}" },
+                          { "title": "Since", "value": "{{now:O}}" }
+                        ]
+                      },
+                      { "type": "TextBlock", "text": "- **database**: Unhealthy (3ms) - down", "wrap": true }
+                    ]
+                  }
+                }
+              ]
+            }
+            """
+        );
+        var actual = JsonNode.Parse(factory.Handler.Requests[0].Body!);
+        _ = await Assert.That(JsonNode.DeepEquals(actual, expected)).IsTrue();
+    }
+
+    [Test]
+    [Arguments(4000, true)]
+    [Arguments(4001, false)]
+    public async Task PublishAsync_WhenEntryLandsOnMaxLengthBoundary_IncludesEntryOnlyIfWithinLimit(
+        int totalLength,
+        bool expectedIncluded,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory();
+        _ = factory.Handler.OnPost(WebhookPath).Respond(HttpStatusCode.OK);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new MicrosoftTeamsHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        // A line is "- **k**: Healthy (1ms) - {description}" plus "\n\n", i.e. 27 characters plus the description.
+        const int LineOverhead = 27;
+        const int FirstLineLength = 3000;
+        var entries = new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal)
+        {
+            ["a"] = new HealthReportEntry(
+                HealthStatus.Healthy,
+                new string('x', FirstLineLength - LineOverhead),
+                TimeSpan.FromMilliseconds(1L),
+                null,
+                null
+            ),
+            ["b"] = new HealthReportEntry(
+                HealthStatus.Healthy,
+                new string('y', totalLength - FirstLineLength - LineOverhead),
+                TimeSpan.FromMilliseconds(1L),
+                null,
+                null
+            ),
+        };
+        var report = new HealthReport(entries, HealthStatus.Unhealthy, TimeSpan.FromMilliseconds(2L));
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        var details = JsonDocument
+            .Parse(factory.Handler.Requests[0].Body!)
+            .RootElement.GetProperty("attachments")[0]
+            .GetProperty("content")
+            .GetProperty("body")[2]
+            .GetProperty("text")
+            .GetString();
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(details!.Contains("- **b**", StringComparison.Ordinal)).IsEqualTo(expectedIncluded);
+            // TrimEnd removes the trailing separator but nothing at the start.
+            _ = await Assert.That(details).StartsWith("- **a**");
+            _ = await Assert.That(details).EndsWith(expectedIncluded ? "y" : "x");
         }
     }
 
