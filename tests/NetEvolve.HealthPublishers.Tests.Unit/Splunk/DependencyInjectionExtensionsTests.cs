@@ -58,7 +58,7 @@ public sealed class DependencyInjectionExtensionsTests
     }
 
     [Test]
-    public void AddSplunkPublisher_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
+    public async Task AddSplunkPublisher_WhenArgumentNameIsAlreadyUsed_ThrowArgumentException()
     {
         // Arrange
         var configuration = new ConfigurationBuilder().Build();
@@ -70,7 +70,8 @@ public sealed class DependencyInjectionExtensionsTests
         void Act() => builder.AddSplunkPublisher(name).AddSplunkPublisher(name);
 
         // Assert
-        _ = Assert.Throws<ArgumentException>(nameof(name), Act);
+        var exception = Assert.Throws<ArgumentException>(nameof(name), Act);
+        _ = await Assert.That(exception.Message).Contains("Name `Test` already in use.");
     }
 
     [Test]
@@ -158,6 +159,34 @@ public sealed class DependencyInjectionExtensionsTests
         // Assert
         var publishers = provider.GetServices<IHealthCheckPublisher>().OfType<SplunkHealthCheckPublisher>();
         _ = await Assert.That(publishers.Count()).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task AddSplunkPublisher_WhenCalled_RegistersHttpClientUnderPrefixedName()
+    {
+        // Arrange
+        var configuration = new ConfigurationBuilder().Build();
+        var services = new ServiceCollection();
+        var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
+        const string? name = "Test";
+        _ = builder.AddSplunkPublisher(
+            name,
+            options =>
+            {
+                options.SystemIdentifier = "checkout-service";
+                options.HecToken = "test-hec-token";
+                options.ServerUrl = new Uri("https://splunk.example.com:8088");
+            }
+        );
+        var provider = services.BuildServiceProvider();
+
+        // Act
+        using var client = provider
+            .GetRequiredService<IHttpClientFactory>()
+            .CreateClient($"{DependencyInjectionExtensions.HttpClientNamePrefix}{name}");
+
+        // Assert
+        _ = await Assert.That(client.BaseAddress).IsEqualTo(new Uri("https://splunk.example.com:8088"));
     }
 
     [Test]

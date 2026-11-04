@@ -13,6 +13,7 @@ using Microsoft.Extensions.Time.Testing;
 using NetEvolve.Extensions.TUnit;
 using NetEvolve.HealthPublishers.Datadog;
 using TUnit.Mocks;
+using TUnit.Mocks.Http;
 
 [TestGroup(nameof(Datadog))]
 public sealed class DatadogHealthCheckPublisherTests
@@ -342,6 +343,28 @@ public sealed class DatadogHealthCheckPublisherTests
         // Assert
         _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
         _ = await Assert.That(factory.Handler.Requests.Count).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenHandlerRegisteredForPrefixedClientName_SendsRequestThroughNamedClient(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Arrange
+        using var factory = Mock.HttpClientFactory().WithBaseAddress("https://api.datadoghq.com");
+        using var handler = new MockHttpHandler();
+        _ = handler.OnPost("/api/v1/events").Respond(HttpStatusCode.Accepted);
+        _ = factory.WithHandler($"{DependencyInjectionExtensions.HttpClientNamePrefix}{TestName}", handler);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new DatadogHealthCheckPublisher(TestName, factory, optionsMonitor, TimeProvider.System);
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+
+        // Act
+        await publisher.PublishAsync(report, cancellationToken);
+
+        // Assert
+        _ = await Assert.That(handler.Requests.Count).IsEqualTo(1);
     }
 
     private static IOptionsMonitor<DatadogOptions> CreateOptionsMonitor(Action<DatadogOptions> configure)
