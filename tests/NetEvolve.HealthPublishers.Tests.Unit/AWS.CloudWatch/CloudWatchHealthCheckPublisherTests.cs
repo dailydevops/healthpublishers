@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.AWS.CloudWatch;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.AWS.CloudWatch;
 
 using System;
 using System.Collections.Generic;
@@ -334,6 +334,29 @@ public sealed class CloudWatchHealthCheckPublisherTests
             optionsMonitor,
             timeProvider ?? TimeProvider.System
         );
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        var mock = CreateMock();
+        var publisher = CreatePublisher(mock);
+        var report = EmptyReport();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(Mock.Invocations(mock).Count).IsEqualTo(0);
     }
 
     private static IOptionsMonitor<CloudWatchOptions> CreateOptionsMonitor(Action<CloudWatchOptions> configure)

@@ -1,4 +1,4 @@
-namespace NetEvolve.HealthPublishers.Tests.Unit.OpenTelemetry;
+﻿namespace NetEvolve.HealthPublishers.Tests.Unit.OpenTelemetry;
 
 using System;
 using System.Collections.Generic;
@@ -149,6 +149,37 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
         _ = await Assert
             .That(measurements.Tags[0]["healthchecks.timestamp"])
             .IsEqualTo("2026-01-02T03:04:05.0000000+00:00");
+    }
+
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        using var meter = new Meter(DependencyInjectionExtensions.MeterName);
+        var instruments = new OpenTelemetryInstruments(meter);
+        var optionsMonitor = CreateOptionsMonitor(options => { });
+        var publisher = new OpenTelemetryHealthCheckPublisher(
+            TestName,
+            optionsMonitor,
+            instruments,
+            TimeProvider.System
+        );
+        using var measurements = new MeasurementRecorder(meter, "healthchecks.report.duration");
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        _ = await Assert.That(measurements.Values.Count).IsEqualTo(0);
     }
 
     private static IOptionsMonitor<OpenTelemetryOptions> CreateOptionsMonitor(Action<OpenTelemetryOptions> configure)

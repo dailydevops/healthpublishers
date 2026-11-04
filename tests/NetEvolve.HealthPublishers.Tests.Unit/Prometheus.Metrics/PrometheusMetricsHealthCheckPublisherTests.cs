@@ -336,6 +336,29 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         _ = await Assert.That(text).Contains("check=\"database\"");
     }
 
+    [Test]
+    public async Task PublishAsync_WhenCancellationRequested_ThrowsAndDoesNotPublish(
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Arrange
+        var (publisher, instruments, _) = CreatePublisher(options => options.SystemIdentifier = "checkout-service");
+        var report = new HealthReport(new Dictionary<string, HealthReportEntry>(StringComparer.Ordinal), TimeSpan.Zero);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        await cts.CancelAsync();
+        var canceledToken = cts.Token;
+
+        // Act
+        async Task Act() => await publisher.PublishAsync(report, canceledToken);
+
+        // Assert
+        _ = await Assert.ThrowsAsync<OperationCanceledException>(Act);
+        var gauge = instruments.ReportStatus.WithLabels("checkout-service", Environment.MachineName);
+        _ = await Assert.That(gauge.Value).IsEqualTo(0d);
+    }
+
     private static async Task<string> ExportAsTextAsync(
         CollectorRegistry registry,
         CancellationToken cancellationToken = default
