@@ -2,8 +2,10 @@ namespace NetEvolve.HealthPublishers.Tests.Unit.AWS.CloudWatch;
 
 using System;
 using System.Linq;
+using System.Reflection;
 using Amazon;
 using Amazon.CloudWatch;
+using Amazon.Runtime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -213,7 +215,37 @@ public sealed class DependencyInjectionExtensionsTests
         using var client = (AmazonCloudWatchClient)DependencyInjectionExtensions.CreateClient(options);
 
         // Assert
-        _ = await Assert.That(client.Config.ServiceURL).IsEqualTo("https://localhost:4566/");
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(client.Config.ServiceURL).IsEqualTo("https://localhost:4566/");
+            _ = await Assert.That(client.Config.AuthenticationRegion).IsEqualTo("eu-central-1");
+        }
+    }
+
+    [Test]
+    public async Task CreateClient_WhenServiceUrlSetAndRegionNotSet_DoesNotSetAuthenticationRegion()
+    {
+        // Arrange
+        var options = new CloudWatchOptions { ServiceUrl = new Uri("https://localhost:4566") };
+
+        // Act
+        using var client = (AmazonCloudWatchClient)DependencyInjectionExtensions.CreateClient(options);
+
+        // Assert
+        _ = await Assert.That(client.Config.AuthenticationRegion).IsNull();
+    }
+
+    [Test]
+    public async Task CreateClient_WhenServiceUrlNotSet_DoesNotSetAuthenticationRegion()
+    {
+        // Arrange
+        var options = new CloudWatchOptions { Region = "eu-central-1" };
+
+        // Act
+        using var client = (AmazonCloudWatchClient)DependencyInjectionExtensions.CreateClient(options);
+
+        // Assert
+        _ = await Assert.That(client.Config.AuthenticationRegion).IsNull();
     }
 
     [Test]
@@ -226,7 +258,7 @@ public sealed class DependencyInjectionExtensionsTests
         using var client = DependencyInjectionExtensions.CreateClient(options);
 
         // Assert
-        _ = await Assert.That(client).IsNotNull();
+        _ = await Assert.That(GetExplicitCredentials(client)).IsNull();
     }
 
     [Test]
@@ -244,6 +276,54 @@ public sealed class DependencyInjectionExtensionsTests
         using var client = DependencyInjectionExtensions.CreateClient(options);
 
         // Assert
-        _ = await Assert.That(client).IsNotNull();
+        var explicitCredentials = GetExplicitCredentials(client);
+        _ = await Assert.That(explicitCredentials).IsNotNull();
+        var credentials = await explicitCredentials!.GetCredentialsAsync();
+        using (Assert.Multiple())
+        {
+            _ = await Assert.That(credentials.AccessKey).IsEqualTo("test-access-key");
+            _ = await Assert.That(credentials.SecretKey).IsEqualTo("test-secret-key");
+        }
+    }
+
+    [Test]
+    [Arguments("test-access-key", null)]
+    [Arguments(null, "test-secret-key")]
+    [Arguments("test-access-key", " ")]
+    [Arguments(" ", "test-secret-key")]
+    public async Task CreateClient_WhenOnlyOneCredentialPartSet_UsesDefaultCredentials(
+        string? accessKeyId,
+        string? secretAccessKey
+    )
+    {
+        // Arrange
+        var options = new CloudWatchOptions
+        {
+            Region = "eu-central-1",
+            AccessKeyId = accessKeyId,
+            SecretAccessKey = secretAccessKey,
+        };
+
+        // Act
+        using var client = DependencyInjectionExtensions.CreateClient(options);
+
+        // Assert
+        _ = await Assert.That(GetExplicitCredentials(client)).IsNull();
+    }
+
+    // AmazonServiceClient exposes the explicitly supplied credentials only through a protected property, so
+    // reflection is the only way to observe them; it fails clearly if the SDK renames the property.
+    private static AWSCredentials? GetExplicitCredentials(IAmazonCloudWatch client)
+    {
+        var property =
+            typeof(AmazonServiceClient).GetProperty(
+                "ExplicitAWSCredentials",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+            )
+            ?? throw new InvalidOperationException(
+                "AmazonServiceClient.ExplicitAWSCredentials not found; the AWS SDK internals changed."
+            );
+
+        return (AWSCredentials?)property.GetValue(client);
     }
 }
