@@ -12,7 +12,7 @@ using TUnit.Core.Interfaces;
 public sealed class ElasticsearchContainer : IAsyncInitializer, IAsyncDisposable
 {
     private const string Image = /*dockerimage*/
-        "docker.elastic.co/elasticsearch/elasticsearch:9.4.2";
+        "docker.elastic.co/elasticsearch/elasticsearch:9.5.6";
 
     /// <summary>
     /// The password configured for the built-in <c>elastic</c> superuser.
