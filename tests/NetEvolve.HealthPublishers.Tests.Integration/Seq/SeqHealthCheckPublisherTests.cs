@@ -211,22 +211,16 @@ public sealed class SeqHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddSeqPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ServerUrl = _container.ServerUrl;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddSeqPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ServerUrl = _container.ServerUrl;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddSeqPublisher(name, options =>
+                {
+                    options.ServerUrl = _container.ServerUrl;
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddSeqPublisher(name, options =>
+                {
+                    options.ServerUrl = _container.ServerUrl;
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -245,22 +239,16 @@ public sealed class SeqHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddSeqPublisher(
-            "Internal",
-            options =>
-            {
-                options.ServerUrl = _container.ServerUrl;
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddSeqPublisher(
-            "External",
-            options =>
-            {
-                options.ServerUrl = secondContainer.ServerUrl;
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddSeqPublisher("Internal", options =>
+        {
+            options.ServerUrl = _container.ServerUrl;
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddSeqPublisher("External", options =>
+        {
+            options.ServerUrl = secondContainer.ServerUrl;
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();

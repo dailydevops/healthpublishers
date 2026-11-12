@@ -181,14 +181,11 @@ public sealed class SeqHealthCheckPublisherTests
     private static IOptionsMonitor<SeqOptions> CreateOptionsMonitor(Action<SeqOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<SeqOptions>(
-            TestName,
-            options =>
-            {
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<SeqOptions>(TestName, options =>
+        {
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<SeqOptions>>();
     }
 }

@@ -110,17 +110,14 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddEmailPublisher(
-            name,
-            options =>
-            {
-                options.Host = "smtp.example.com";
-                options.Port = 587;
-                options.From = "health-checks@example.com";
-                options.To = ["ops-team@example.com"];
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddEmailPublisher(name, options =>
+        {
+            options.Host = "smtp.example.com";
+            options.Port = 587;
+            options.From = "health-checks@example.com";
+            options.To = ["ops-team@example.com"];
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<EmailOptions>>().Get(name);
 

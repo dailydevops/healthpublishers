@@ -325,16 +325,13 @@ public sealed class SplunkHealthCheckPublisherTests
     private static IOptionsMonitor<SplunkOptions> CreateOptionsMonitor(Action<SplunkOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<SplunkOptions>(
-            TestName,
-            options =>
-            {
-                options.ServerUrl = new Uri("https://splunk.example.com:8088");
-                options.HecToken = "test-token";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<SplunkOptions>(TestName, options =>
+        {
+            options.ServerUrl = new Uri("https://splunk.example.com:8088");
+            options.HecToken = "test-token";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<SplunkOptions>>();
     }
 }

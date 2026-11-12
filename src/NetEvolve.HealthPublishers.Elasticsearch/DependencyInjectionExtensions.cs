@@ -100,13 +100,11 @@ public static class DependencyInjectionExtensions
             _ = builder.Services.Configure(name, options);
         }
 
-        _ = builder.Services.AddKeyedSingleton(
-            name,
-            (provider, key) =>
-                CreateClient(
-                    provider.GetRequiredService<IOptionsMonitor<ElasticsearchOptions>>().Get((string?)key),
-                    configureSettings: configureSettings
-                )
+        _ = builder.Services.AddKeyedSingleton(name, (provider, key) =>
+            CreateClient(
+                provider.GetRequiredService<IOptionsMonitor<ElasticsearchOptions>>().Get((string?)key),
+                configureSettings: configureSettings
+            )
         );
 
         _ = builder.Services.AddSingleton<IHealthCheckPublisher>(provider => new ElasticsearchHealthCheckPublisher(

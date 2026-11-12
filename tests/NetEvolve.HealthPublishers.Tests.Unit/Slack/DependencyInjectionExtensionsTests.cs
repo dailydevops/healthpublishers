@@ -107,14 +107,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddSlackPublisher(
-            name,
-            options =>
-            {
-                options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX");
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddSlackPublisher(name, options =>
+        {
+            options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX");
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<SlackOptions>>().Get(name);
 
@@ -132,9 +129,8 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddSlackPublisher(
-            name,
-            options => options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX")
+        _ = builder.AddSlackPublisher(name, options =>
+            options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX")
         );
         var provider = services.BuildServiceProvider();
 
@@ -153,13 +149,11 @@ public sealed class DependencyInjectionExtensionsTests
 
         // Act
         _ = builder
-            .AddSlackPublisher(
-                "Internal",
-                options => options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/AAA")
+            .AddSlackPublisher("Internal", options =>
+                options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/AAA")
             )
-            .AddSlackPublisher(
-                "External",
-                options => options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/BBB")
+            .AddSlackPublisher("External", options =>
+                options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/BBB")
             );
         var provider = services.BuildServiceProvider();
 
@@ -176,14 +170,11 @@ public sealed class DependencyInjectionExtensionsTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
         const string? name = "Test";
-        _ = builder.AddSlackPublisher(
-            name,
-            options =>
-            {
-                options.SystemIdentifier = "checkout-service";
-                options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX");
-            }
-        );
+        _ = builder.AddSlackPublisher(name, options =>
+        {
+            options.SystemIdentifier = "checkout-service";
+            options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX");
+        });
         var provider = services.BuildServiceProvider();
 
         // Act
@@ -201,9 +192,8 @@ public sealed class DependencyInjectionExtensionsTests
         // Arrange
         const string? name = "Test";
         var services = new ServiceCollection();
-        _ = services.Configure<SlackOptions>(
-            name,
-            options => options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX")
+        _ = services.Configure<SlackOptions>(name, options =>
+            options.WebhookUrl = new Uri("https://hooks.slack.com/services/T000/B000/XXX")
         );
         var provider = services.BuildServiceProvider();
         using var client = new HttpClient();

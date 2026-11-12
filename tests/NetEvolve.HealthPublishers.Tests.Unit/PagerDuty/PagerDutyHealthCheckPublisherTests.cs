@@ -335,15 +335,12 @@ public sealed class PagerDutyHealthCheckPublisherTests
     private static IOptionsMonitor<PagerDutyOptions> CreateOptionsMonitor(Action<PagerDutyOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<PagerDutyOptions>(
-            TestName,
-            options =>
-            {
-                options.RoutingKey = "test-key";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<PagerDutyOptions>(TestName, options =>
+        {
+            options.RoutingKey = "test-key";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<PagerDutyOptions>>();
     }
 }

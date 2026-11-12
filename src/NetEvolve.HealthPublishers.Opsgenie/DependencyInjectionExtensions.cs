@@ -81,9 +81,8 @@ public static class DependencyInjectionExtensions
             _ = builder.Services.Configure(name, options);
         }
 
-        _ = builder.Services.AddHttpClient(
-            $"{HttpClientNamePrefix}{name}",
-            (provider, client) => ConfigureHttpClient(name, provider, client)
+        _ = builder.Services.AddHttpClient($"{HttpClientNamePrefix}{name}", (provider, client) =>
+            ConfigureHttpClient(name, provider, client)
         );
 
         _ = builder.Services.AddSingleton<IHealthCheckPublisher>(provider => new OpsgenieHealthCheckPublisher(
@@ -97,8 +96,8 @@ public static class DependencyInjectionExtensions
     }
 
     internal static void ConfigureHttpClient(string name, IServiceProvider provider, HttpClient client) =>
-        client.BaseAddress =
-            provider.GetRequiredService<IOptionsMonitor<OpsgenieOptions>>().Get(name).ApiUrl ?? DefaultApiUrl;
+        client.BaseAddress = provider.GetRequiredService<IOptionsMonitor<OpsgenieOptions>>().Get(name).ApiUrl
+            ?? DefaultApiUrl;
 
 #pragma warning disable S2094 // Classes should not be empty
     private sealed class OpsgeniePublisherMarker;

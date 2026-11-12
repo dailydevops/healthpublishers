@@ -350,14 +350,11 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
     )
     {
         var services = new ServiceCollection();
-        _ = services.Configure<ApplicationInsightsOptions>(
-            TestName,
-            options =>
-            {
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<ApplicationInsightsOptions>(TestName, options =>
+        {
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<ApplicationInsightsOptions>>();
     }
 }

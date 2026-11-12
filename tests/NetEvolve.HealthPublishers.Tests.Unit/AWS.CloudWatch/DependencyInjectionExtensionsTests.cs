@@ -112,15 +112,12 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddAWSCloudWatchPublisher(
-            name,
-            options =>
-            {
-                options.Region = "eu-central-1";
-                options.Namespace = "HealthChecks";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddAWSCloudWatchPublisher(name, options =>
+        {
+            options.Region = "eu-central-1";
+            options.Namespace = "HealthChecks";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<CloudWatchOptions>>().Get(name);
 
@@ -138,15 +135,12 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddAWSCloudWatchPublisher(
-            name,
-            options =>
-            {
-                options.Region = "eu-central-1";
-                options.Namespace = "HealthChecks";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddAWSCloudWatchPublisher(name, options =>
+        {
+            options.Region = "eu-central-1";
+            options.Namespace = "HealthChecks";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -168,24 +162,18 @@ public sealed class DependencyInjectionExtensionsTests
 
         // Act
         _ = builder
-            .AddAWSCloudWatchPublisher(
-                "Internal",
-                options =>
-                {
-                    options.Region = "eu-central-1";
-                    options.Namespace = "HealthChecks";
-                    options.SystemIdentifier = "checkout-service";
-                }
-            )
-            .AddAWSCloudWatchPublisher(
-                "External",
-                options =>
-                {
-                    options.Region = "eu-west-1";
-                    options.Namespace = "HealthChecks";
-                    options.SystemIdentifier = "checkout-service";
-                }
-            );
+            .AddAWSCloudWatchPublisher("Internal", options =>
+            {
+                options.Region = "eu-central-1";
+                options.Namespace = "HealthChecks";
+                options.SystemIdentifier = "checkout-service";
+            })
+            .AddAWSCloudWatchPublisher("External", options =>
+            {
+                options.Region = "eu-west-1";
+                options.Namespace = "HealthChecks";
+                options.SystemIdentifier = "checkout-service";
+            });
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -316,11 +304,10 @@ public sealed class DependencyInjectionExtensionsTests
     // reflection is the only way to observe them; it fails clearly if the SDK renames the property.
     private static AWSCredentials? GetExplicitCredentials(IAmazonCloudWatch client)
     {
-        var property =
-            typeof(AmazonServiceClient).GetProperty(
-                "ExplicitAWSCredentials",
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
-            )
+        var property = typeof(AmazonServiceClient).GetProperty(
+            "ExplicitAWSCredentials",
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+        )
             ?? throw new InvalidOperationException(
                 "AmazonServiceClient.ExplicitAWSCredentials not found; the AWS SDK internals changed."
             );
