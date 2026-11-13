@@ -256,24 +256,18 @@ public sealed class SplunkHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddSplunkPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ServerUrl = _container.ServerUrl;
-                        options.HecToken = SplunkContainer.HecToken;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddSplunkPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ServerUrl = _container.ServerUrl;
-                        options.HecToken = SplunkContainer.HecToken;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddSplunkPublisher(name, options =>
+                {
+                    options.ServerUrl = _container.ServerUrl;
+                    options.HecToken = SplunkContainer.HecToken;
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddSplunkPublisher(name, options =>
+                {
+                    options.ServerUrl = _container.ServerUrl;
+                    options.HecToken = SplunkContainer.HecToken;
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -289,24 +283,18 @@ public sealed class SplunkHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddSplunkPublisher(
-            "Internal",
-            options =>
-            {
-                options.ServerUrl = _container.ServerUrl;
-                options.HecToken = SplunkContainer.HecToken;
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddSplunkPublisher(
-            "External",
-            options =>
-            {
-                options.ServerUrl = _container.ServerUrl;
-                options.HecToken = SplunkContainer.HecToken;
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddSplunkPublisher("Internal", options =>
+        {
+            options.ServerUrl = _container.ServerUrl;
+            options.HecToken = SplunkContainer.HecToken;
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddSplunkPublisher("External", options =>
+        {
+            options.ServerUrl = _container.ServerUrl;
+            options.HecToken = SplunkContainer.HecToken;
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();
@@ -401,24 +389,18 @@ public sealed class SplunkHealthCheckPublisherTests
             .AddSingleton<IConfiguration>(new ConfigurationBuilder().Build())
             .AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy())
-            .AddSplunkPublisher(
-                "Internal",
-                options =>
-                {
-                    options.ServerUrl = _container.ServerUrl;
-                    options.HecToken = SplunkContainer.HecToken;
-                    options.SystemIdentifier = "internal-system";
-                }
-            )
-            .AddSplunkPublisher(
-                "External",
-                options =>
-                {
-                    options.ServerUrl = _container.ServerUrl;
-                    options.HecToken = SplunkContainer.HecToken;
-                    options.SystemIdentifier = "external-system";
-                }
-            );
+            .AddSplunkPublisher("Internal", options =>
+            {
+                options.ServerUrl = _container.ServerUrl;
+                options.HecToken = SplunkContainer.HecToken;
+                options.SystemIdentifier = "internal-system";
+            })
+            .AddSplunkPublisher("External", options =>
+            {
+                options.ServerUrl = _container.ServerUrl;
+                options.HecToken = SplunkContainer.HecToken;
+                options.SystemIdentifier = "external-system";
+            });
 
 #pragma warning disable CA2000 // Disposed together with the DI-owned HttpClient handlers
         var internalHandler = new CapturingHttpMessageHandler();

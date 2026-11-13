@@ -81,12 +81,10 @@ public static class DependencyInjectionExtensions
 
         _ = builder.Services.AddKeyedSingleton(name, (_, _) => Metrics.NewCustomRegistry());
 
-        _ = builder.Services.AddKeyedSingleton(
-            name,
-            (provider, key) =>
-                new PrometheusMetricsInstruments(
-                    Metrics.WithCustomRegistry(provider.GetRequiredKeyedService<CollectorRegistry>((string?)key))
-                )
+        _ = builder.Services.AddKeyedSingleton(name, (provider, key) =>
+            new PrometheusMetricsInstruments(
+                Metrics.WithCustomRegistry(provider.GetRequiredKeyedService<CollectorRegistry>((string?)key))
+            )
         );
 
         _ = builder.Services.AddSingleton<IHealthCheckPublisher>(provider => new PrometheusMetricsHealthCheckPublisher(

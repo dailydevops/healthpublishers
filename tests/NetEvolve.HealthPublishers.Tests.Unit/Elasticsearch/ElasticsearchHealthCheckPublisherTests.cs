@@ -348,16 +348,13 @@ public sealed class ElasticsearchHealthCheckPublisherTests
     private static IOptionsMonitor<ElasticsearchOptions> CreateOptionsMonitor(Action<ElasticsearchOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<ElasticsearchOptions>(
-            TestName,
-            options =>
-            {
-                options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
-                options.IndexName = "health-checks";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<ElasticsearchOptions>(TestName, options =>
+        {
+            options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
+            options.IndexName = "health-checks";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<ElasticsearchOptions>>();
     }
 }

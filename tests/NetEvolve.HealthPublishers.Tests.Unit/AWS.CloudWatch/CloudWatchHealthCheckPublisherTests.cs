@@ -362,16 +362,13 @@ public sealed class CloudWatchHealthCheckPublisherTests
     private static IOptionsMonitor<CloudWatchOptions> CreateOptionsMonitor(Action<CloudWatchOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<CloudWatchOptions>(
-            TestName,
-            options =>
-            {
-                options.Region = "eu-central-1";
-                options.Namespace = "HealthChecks";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<CloudWatchOptions>(TestName, options =>
+        {
+            options.Region = "eu-central-1";
+            options.Namespace = "HealthChecks";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<CloudWatchOptions>>();
     }
 }

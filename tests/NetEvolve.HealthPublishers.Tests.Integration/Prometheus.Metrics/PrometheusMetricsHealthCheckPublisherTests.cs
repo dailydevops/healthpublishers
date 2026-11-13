@@ -349,9 +349,8 @@ public sealed class PrometheusMetricsHealthCheckPublisherTests
         );
 
         // The last-publish timestamp is excluded too: it is the current unix time and changes on every run.
-        normalized = LastPublishTimestampLine.Replace(
-            normalized,
-            match => match.Value[..match.Value.LastIndexOf(' ')] + " <timestamp>"
+        normalized = LastPublishTimestampLine.Replace(normalized, match =>
+            match.Value[..match.Value.LastIndexOf(' ')] + " <timestamp>"
         );
 
         _ = await Verify(normalized).IgnoreParametersForVerified();

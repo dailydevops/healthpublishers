@@ -107,14 +107,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddMicrosoftTeamsPublisher(
-            name,
-            options =>
-            {
-                options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x");
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddMicrosoftTeamsPublisher(name, options =>
+        {
+            options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x");
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<MicrosoftTeamsOptions>>().Get(name);
 
@@ -132,9 +129,8 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddMicrosoftTeamsPublisher(
-            name,
-            options => options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x")
+        _ = builder.AddMicrosoftTeamsPublisher(name, options =>
+            options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/x")
         );
         var provider = services.BuildServiceProvider();
 
@@ -153,13 +149,11 @@ public sealed class DependencyInjectionExtensionsTests
 
         // Act
         _ = builder
-            .AddMicrosoftTeamsPublisher(
-                "Ops",
-                options => options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/ops")
+            .AddMicrosoftTeamsPublisher("Ops", options =>
+                options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/ops")
             )
-            .AddMicrosoftTeamsPublisher(
-                "OnCall",
-                options => options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/oncall")
+            .AddMicrosoftTeamsPublisher("OnCall", options =>
+                options.WebhookUrl = new Uri("https://example.webhook.office.com/webhookb2/oncall")
             );
         var provider = services.BuildServiceProvider();
 

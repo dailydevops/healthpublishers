@@ -292,15 +292,12 @@ public sealed class WebhookHealthCheckPublisherTests
     private static IOptionsMonitor<WebhookOptions> CreateOptionsMonitor(Action<WebhookOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<WebhookOptions>(
-            TestName,
-            options =>
-            {
-                options.Uri = TestUri;
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<WebhookOptions>(TestName, options =>
+        {
+            options.Uri = TestUri;
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<WebhookOptions>>();
     }
 }

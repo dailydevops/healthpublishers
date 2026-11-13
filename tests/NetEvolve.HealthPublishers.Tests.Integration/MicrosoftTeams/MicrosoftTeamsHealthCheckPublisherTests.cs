@@ -242,22 +242,16 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddMicrosoftTeamsPublisher(
-                    name,
-                    options =>
-                    {
-                        options.WebhookUrl = _server.WebhookUrl;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddMicrosoftTeamsPublisher(
-                    name,
-                    options =>
-                    {
-                        options.WebhookUrl = _server.WebhookUrl;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddMicrosoftTeamsPublisher(name, options =>
+                {
+                    options.WebhookUrl = _server.WebhookUrl;
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddMicrosoftTeamsPublisher(name, options =>
+                {
+                    options.WebhookUrl = _server.WebhookUrl;
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -276,22 +270,16 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddMicrosoftTeamsPublisher(
-            "Internal",
-            options =>
-            {
-                options.WebhookUrl = _server.WebhookUrl;
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddMicrosoftTeamsPublisher(
-            "External",
-            options =>
-            {
-                options.WebhookUrl = secondServer.WebhookUrl;
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddMicrosoftTeamsPublisher("Internal", options =>
+        {
+            options.WebhookUrl = _server.WebhookUrl;
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddMicrosoftTeamsPublisher("External", options =>
+        {
+            options.WebhookUrl = secondServer.WebhookUrl;
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();

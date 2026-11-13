@@ -111,16 +111,13 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddPrometheusPushGateway(
-            name,
-            options =>
-            {
-                options.ServerUrl = new Uri("https://pushgateway.example.com");
-                options.Job = "checkout-service";
-                options.Instance = "checkout-service-instance";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddPrometheusPushGateway(name, options =>
+        {
+            options.ServerUrl = new Uri("https://pushgateway.example.com");
+            options.Job = "checkout-service";
+            options.Instance = "checkout-service-instance";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<PrometheusPushGatewayOptions>>().Get(name);
 
@@ -175,16 +172,13 @@ public sealed class DependencyInjectionExtensionsTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
         const string? name = "Test";
-        _ = builder.AddPrometheusPushGateway(
-            name,
-            options =>
-            {
-                options.Instance = "checkout-service-01";
-                options.SystemIdentifier = "checkout-service";
-                options.Job = "checkout-service";
-                options.ServerUrl = new Uri("https://pushgateway.example.com");
-            }
-        );
+        _ = builder.AddPrometheusPushGateway(name, options =>
+        {
+            options.Instance = "checkout-service-01";
+            options.SystemIdentifier = "checkout-service";
+            options.Job = "checkout-service";
+            options.ServerUrl = new Uri("https://pushgateway.example.com");
+        });
         var provider = services.BuildServiceProvider();
 
         // Act
@@ -202,9 +196,8 @@ public sealed class DependencyInjectionExtensionsTests
         // Arrange
         const string? name = "Test";
         var services = new ServiceCollection();
-        _ = services.Configure<PrometheusPushGatewayOptions>(
-            name,
-            options => options.ServerUrl = new Uri("https://pushgateway.example.com")
+        _ = services.Configure<PrometheusPushGatewayOptions>(name, options =>
+            options.ServerUrl = new Uri("https://pushgateway.example.com")
         );
         var provider = services.BuildServiceProvider();
         using var client = new HttpClient();
@@ -221,9 +214,8 @@ public sealed class DependencyInjectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        _ = services.Configure<PrometheusPushGatewayOptions>(
-            "Other",
-            options => options.ServerUrl = new Uri("https://pushgateway.example.com")
+        _ = services.Configure<PrometheusPushGatewayOptions>("Other", options =>
+            options.ServerUrl = new Uri("https://pushgateway.example.com")
         );
         var provider = services.BuildServiceProvider();
         using var client = new HttpClient();

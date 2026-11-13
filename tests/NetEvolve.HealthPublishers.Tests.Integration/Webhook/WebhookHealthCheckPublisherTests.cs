@@ -212,22 +212,16 @@ public sealed class WebhookHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddWebhookPublisher(
-                    name,
-                    options =>
-                    {
-                        options.Uri = _server.ServerUrl;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddWebhookPublisher(
-                    name,
-                    options =>
-                    {
-                        options.Uri = _server.ServerUrl;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddWebhookPublisher(name, options =>
+                {
+                    options.Uri = _server.ServerUrl;
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddWebhookPublisher(name, options =>
+                {
+                    options.Uri = _server.ServerUrl;
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -246,22 +240,16 @@ public sealed class WebhookHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddWebhookPublisher(
-            "Internal",
-            options =>
-            {
-                options.Uri = _server.ServerUrl;
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddWebhookPublisher(
-            "External",
-            options =>
-            {
-                options.Uri = secondServer.ServerUrl;
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddWebhookPublisher("Internal", options =>
+        {
+            options.Uri = _server.ServerUrl;
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddWebhookPublisher("External", options =>
+        {
+            options.Uri = secondServer.ServerUrl;
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();
