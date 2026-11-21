@@ -6,8 +6,8 @@
   <ItemGroup>
     <GlobalPackageReference Include="CSharpier.MSBuild" Version="1.3.0" />
     <GlobalPackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
-    <GlobalPackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.403" />
-    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.403" />
+    <GlobalPackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="11.0.100" />
+    <GlobalPackageReference Include="Microsoft.SourceLink.GitHub" Version="11.0.100" />
     <GlobalPackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.12.1" />
     <GlobalPackageReference Include="NetEvolve.Analyzer" Version="0.20.92" />
     <GlobalPackageReference Include="NetEvolve.Defaults" Version="2.10.80" />
@@ -22,24 +22,24 @@
     <PackageVersion Include="Elastic.Clients.Elasticsearch" Version="9.5.3" />
     <PackageVersion Include="MailKit" Version="4.18.2" />
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="3.2.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="11.0.0" />
     <PackageVersion Include="prometheus-net" Version="8.2.1" />
     <PackageVersion Include="SSH.NET" Version="2026.0.0" />
-    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup Label="Tool dependencies">
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.14" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="11.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
     <PackageVersion Include="NetEvolve.Extensions.TUnit" Version="3.5.658" />
     <PackageVersion Include="OpenTelemetry.Exporter.InMemory" Version="1.20.1" />
