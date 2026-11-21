@@ -73,10 +73,8 @@ public static class DependencyInjectionExtensions
             _ = builder.Services.Configure(name, options);
         }
 
-        _ = builder.Services.AddKeyedSingleton<IAmazonCloudWatch>(
-            name,
-            (provider, key) =>
-                CreateClient(provider.GetRequiredService<IOptionsMonitor<CloudWatchOptions>>().Get((string?)key))
+        _ = builder.Services.AddKeyedSingleton<IAmazonCloudWatch>(name, (provider, key) =>
+            CreateClient(provider.GetRequiredService<IOptionsMonitor<CloudWatchOptions>>().Get((string?)key))
         );
 
         _ = builder.Services.AddSingleton<IHealthCheckPublisher>(provider => new CloudWatchHealthCheckPublisher(

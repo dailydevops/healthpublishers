@@ -589,15 +589,12 @@ public sealed class OpsgenieHealthCheckPublisherTests
     private static IOptionsMonitor<OpsgenieOptions> CreateOptionsMonitor(Action<OpsgenieOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<OpsgenieOptions>(
-            TestName,
-            options =>
-            {
-                options.ApiKey = "test-key";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<OpsgenieOptions>(TestName, options =>
+        {
+            options.ApiKey = "test-key";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<OpsgenieOptions>>();
     }
 }

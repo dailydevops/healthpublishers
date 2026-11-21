@@ -207,22 +207,16 @@ public sealed class SlackHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddSlackPublisher(
-            "Internal",
-            options =>
-            {
-                options.WebhookUrl = _server.ServerUrl;
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddSlackPublisher(
-            "External",
-            options =>
-            {
-                options.WebhookUrl = secondServer.ServerUrl;
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddSlackPublisher("Internal", options =>
+        {
+            options.WebhookUrl = _server.ServerUrl;
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddSlackPublisher("External", options =>
+        {
+            options.WebhookUrl = secondServer.ServerUrl;
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();

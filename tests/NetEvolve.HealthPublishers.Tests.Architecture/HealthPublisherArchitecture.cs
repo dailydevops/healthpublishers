@@ -37,12 +37,10 @@ internal static class HealthPublisherArchitecture
         ];
 
         return new ArchLoader()
-            .LoadAssembliesRecursively(
-                assemblies,
-                x =>
-                    x.Name.Name.StartsWith("NetEvolve.HealthPublishers", StringComparison.OrdinalIgnoreCase)
-                        ? FilterResult.LoadAndContinue
-                        : FilterResult.SkipAndContinue
+            .LoadAssembliesRecursively(assemblies, x =>
+                x.Name.Name.StartsWith("NetEvolve.HealthPublishers", StringComparison.OrdinalIgnoreCase)
+                    ? FilterResult.LoadAndContinue
+                    : FilterResult.SkipAndContinue
             )
             .Build();
     }

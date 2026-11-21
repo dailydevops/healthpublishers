@@ -110,15 +110,12 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddElasticsearchPublisher(
-            name,
-            options =>
-            {
-                options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
-                options.IndexName = "health-checks";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddElasticsearchPublisher(name, options =>
+        {
+            options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
+            options.IndexName = "health-checks";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<ElasticsearchOptions>>().Get(name);
 
@@ -136,15 +133,12 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddElasticsearchPublisher(
-            name,
-            options =>
-            {
-                options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
-                options.IndexName = "health-checks";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddElasticsearchPublisher(name, options =>
+        {
+            options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
+            options.IndexName = "health-checks";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
 
         // Assert
@@ -162,24 +156,18 @@ public sealed class DependencyInjectionExtensionsTests
 
         // Act
         _ = builder
-            .AddElasticsearchPublisher(
-                "Internal",
-                options =>
-                {
-                    options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
-                    options.IndexName = "health-checks";
-                    options.SystemIdentifier = "checkout-service";
-                }
-            )
-            .AddElasticsearchPublisher(
-                "External",
-                options =>
-                {
-                    options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
-                    options.IndexName = "health-checks";
-                    options.SystemIdentifier = "checkout-service";
-                }
-            );
+            .AddElasticsearchPublisher("Internal", options =>
+            {
+                options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
+                options.IndexName = "health-checks";
+                options.SystemIdentifier = "checkout-service";
+            })
+            .AddElasticsearchPublisher("External", options =>
+            {
+                options.ServerUri = new Uri("https://elasticsearch.example.com:9200");
+                options.IndexName = "health-checks";
+                options.SystemIdentifier = "checkout-service";
+            });
         var provider = services.BuildServiceProvider();
 
         // Assert

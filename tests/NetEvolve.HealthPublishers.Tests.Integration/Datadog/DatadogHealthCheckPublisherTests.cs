@@ -216,24 +216,18 @@ public sealed class DatadogHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddDatadogPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ApiUrl = _server.ServerUrl;
-                        options.ApiKey = "integration-test-key";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddDatadogPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ApiUrl = _server.ServerUrl;
-                        options.ApiKey = "integration-test-key";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddDatadogPublisher(name, options =>
+                {
+                    options.ApiUrl = _server.ServerUrl;
+                    options.ApiKey = "integration-test-key";
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddDatadogPublisher(name, options =>
+                {
+                    options.ApiUrl = _server.ServerUrl;
+                    options.ApiKey = "integration-test-key";
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -252,24 +246,18 @@ public sealed class DatadogHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddDatadogPublisher(
-            "Internal",
-            options =>
-            {
-                options.ApiUrl = _server.ServerUrl;
-                options.ApiKey = "integration-test-key";
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddDatadogPublisher(
-            "External",
-            options =>
-            {
-                options.ApiUrl = secondServer.ServerUrl;
-                options.ApiKey = "integration-test-key";
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddDatadogPublisher("Internal", options =>
+        {
+            options.ApiUrl = _server.ServerUrl;
+            options.ApiKey = "integration-test-key";
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddDatadogPublisher("External", options =>
+        {
+            options.ApiUrl = secondServer.ServerUrl;
+            options.ApiKey = "integration-test-key";
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();

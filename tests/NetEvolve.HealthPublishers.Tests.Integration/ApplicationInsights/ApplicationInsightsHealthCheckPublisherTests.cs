@@ -180,22 +180,16 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddApplicationInsightsPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ConnectionString = TestConnectionString;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddApplicationInsightsPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ConnectionString = TestConnectionString;
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddApplicationInsightsPublisher(name, options =>
+                {
+                    options.ConnectionString = TestConnectionString;
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddApplicationInsightsPublisher(name, options =>
+                {
+                    options.ConnectionString = TestConnectionString;
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -211,44 +205,32 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddApplicationInsightsPublisher(
-            "Internal",
-            options =>
-            {
-                options.ConnectionString = TestConnectionString;
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddApplicationInsightsPublisher(
-            "External",
-            options =>
-            {
-                options.ConnectionString = TestConnectionString;
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddApplicationInsightsPublisher("Internal", options =>
+        {
+            options.ConnectionString = TestConnectionString;
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddApplicationInsightsPublisher("External", options =>
+        {
+            options.ConnectionString = TestConnectionString;
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalChannel = new TestTelemetryChannel();
         var externalChannel = new TestTelemetryChannel();
 #pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
-        _ = services.AddKeyedSingleton(
-            "Internal",
-            (_, _) =>
-            {
-                var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
-                internalChannel.Configure(configuration);
-                return configuration;
-            }
-        );
-        _ = services.AddKeyedSingleton(
-            "External",
-            (_, _) =>
-            {
-                var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
-                externalChannel.Configure(configuration);
-                return configuration;
-            }
-        );
+        _ = services.AddKeyedSingleton("Internal", (_, _) =>
+        {
+            var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+            internalChannel.Configure(configuration);
+            return configuration;
+        });
+        _ = services.AddKeyedSingleton("External", (_, _) =>
+        {
+            var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+            externalChannel.Configure(configuration);
+            return configuration;
+        });
 #pragma warning restore CA2000
 
         var provider = services.BuildServiceProvider();
@@ -299,15 +281,12 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
 
         var channel = new TestTelemetryChannel();
 #pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
-        _ = services.AddKeyedSingleton(
-            DependencyInjectionExtensions.DefaultName,
-            (_, _) =>
-            {
-                var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
-                channel.Configure(configuration);
-                return configuration;
-            }
-        );
+        _ = services.AddKeyedSingleton(DependencyInjectionExtensions.DefaultName, (_, _) =>
+        {
+            var configuration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+            channel.Configure(configuration);
+            return configuration;
+        });
 #pragma warning restore CA2000
 
         var provider = services.BuildServiceProvider();
@@ -368,15 +347,12 @@ public sealed class ApplicationInsightsHealthCheckPublisherTests
 
         var channel = new TestTelemetryChannel();
 #pragma warning disable CA2000 // Disposed together with the DI-owned TelemetryConfiguration
-        _ = services.AddKeyedSingleton(
-            DependencyInjectionExtensions.DefaultName,
-            (_, _) =>
-            {
-                var telemetryConfiguration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
-                channel.Configure(telemetryConfiguration);
-                return telemetryConfiguration;
-            }
-        );
+        _ = services.AddKeyedSingleton(DependencyInjectionExtensions.DefaultName, (_, _) =>
+        {
+            var telemetryConfiguration = new TelemetryConfiguration { ConnectionString = TestConnectionString };
+            channel.Configure(telemetryConfiguration);
+            return telemetryConfiguration;
+        });
 #pragma warning restore CA2000
 
         var provider = services.BuildServiceProvider();

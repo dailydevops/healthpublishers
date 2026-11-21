@@ -893,15 +893,12 @@ public sealed class MicrosoftTeamsHealthCheckPublisherTests
     private static IOptionsMonitor<MicrosoftTeamsOptions> CreateOptionsMonitor(Action<MicrosoftTeamsOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<MicrosoftTeamsOptions>(
-            TestName,
-            options =>
-            {
-                options.WebhookUrl = WebhookUrl;
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<MicrosoftTeamsOptions>(TestName, options =>
+        {
+            options.WebhookUrl = WebhookUrl;
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<MicrosoftTeamsOptions>>();
     }
 }

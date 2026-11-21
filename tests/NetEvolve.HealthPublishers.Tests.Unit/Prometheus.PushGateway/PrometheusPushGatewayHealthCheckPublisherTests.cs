@@ -556,17 +556,14 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
     )
     {
         var services = new ServiceCollection();
-        _ = services.Configure<PrometheusPushGatewayOptions>(
-            TestName,
-            options =>
-            {
-                options.ServerUrl = new Uri("https://pushgateway.example.com");
-                options.Job = "checkout-service";
-                options.Instance = "checkout-service-01";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<PrometheusPushGatewayOptions>(TestName, options =>
+        {
+            options.ServerUrl = new Uri("https://pushgateway.example.com");
+            options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<PrometheusPushGatewayOptions>>();
     }
 }

@@ -108,15 +108,12 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddSplunkPublisher(
-            name,
-            options =>
-            {
-                options.ServerUrl = new Uri("https://splunk.example.com:8088");
-                options.HecToken = "test-token";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddSplunkPublisher(name, options =>
+        {
+            options.ServerUrl = new Uri("https://splunk.example.com:8088");
+            options.HecToken = "test-token";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<SplunkOptions>>().Get(name);
 
@@ -169,15 +166,12 @@ public sealed class DependencyInjectionExtensionsTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
         const string? name = "Test";
-        _ = builder.AddSplunkPublisher(
-            name,
-            options =>
-            {
-                options.SystemIdentifier = "checkout-service";
-                options.HecToken = "test-hec-token";
-                options.ServerUrl = new Uri("https://splunk.example.com:8088");
-            }
-        );
+        _ = builder.AddSplunkPublisher(name, options =>
+        {
+            options.SystemIdentifier = "checkout-service";
+            options.HecToken = "test-hec-token";
+            options.ServerUrl = new Uri("https://splunk.example.com:8088");
+        });
         var provider = services.BuildServiceProvider();
 
         // Act
@@ -195,9 +189,8 @@ public sealed class DependencyInjectionExtensionsTests
         // Arrange
         const string? name = "Test";
         var services = new ServiceCollection();
-        _ = services.Configure<SplunkOptions>(
-            name,
-            options => options.ServerUrl = new Uri("https://splunk.example.com:8088")
+        _ = services.Configure<SplunkOptions>(name, options =>
+            options.ServerUrl = new Uri("https://splunk.example.com:8088")
         );
         var provider = services.BuildServiceProvider();
         using var client = new HttpClient();

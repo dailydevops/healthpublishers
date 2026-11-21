@@ -107,14 +107,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddPagerDutyPublisher(
-            name,
-            options =>
-            {
-                options.RoutingKey = "test-key";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddPagerDutyPublisher(name, options =>
+        {
+            options.RoutingKey = "test-key";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<PagerDutyOptions>>().Get(name);
 
@@ -167,15 +164,12 @@ public sealed class DependencyInjectionExtensionsTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
         const string? name = "Test";
-        _ = builder.AddPagerDutyPublisher(
-            name,
-            options =>
-            {
-                options.SystemIdentifier = "checkout-service";
-                options.RoutingKey = "test-key";
-                options.ApiUrl = new Uri("https://events.eu.pagerduty.com");
-            }
-        );
+        _ = builder.AddPagerDutyPublisher(name, options =>
+        {
+            options.SystemIdentifier = "checkout-service";
+            options.RoutingKey = "test-key";
+            options.ApiUrl = new Uri("https://events.eu.pagerduty.com");
+        });
         var provider = services.BuildServiceProvider();
 
         // Act
@@ -193,9 +187,8 @@ public sealed class DependencyInjectionExtensionsTests
         // Arrange
         const string? name = "Test";
         var services = new ServiceCollection();
-        _ = services.Configure<PagerDutyOptions>(
-            name,
-            options => options.ApiUrl = new Uri("https://events.eu.pagerduty.com")
+        _ = services.Configure<PagerDutyOptions>(name, options =>
+            options.ApiUrl = new Uri("https://events.eu.pagerduty.com")
         );
         var provider = services.BuildServiceProvider();
         using var client = new HttpClient();

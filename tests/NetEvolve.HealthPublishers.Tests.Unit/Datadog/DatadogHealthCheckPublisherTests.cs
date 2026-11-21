@@ -370,15 +370,12 @@ public sealed class DatadogHealthCheckPublisherTests
     private static IOptionsMonitor<DatadogOptions> CreateOptionsMonitor(Action<DatadogOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<DatadogOptions>(
-            TestName,
-            options =>
-            {
-                options.ApiKey = "test-key";
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<DatadogOptions>(TestName, options =>
+        {
+            options.ApiKey = "test-key";
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<DatadogOptions>>();
     }
 }

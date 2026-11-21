@@ -301,28 +301,22 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         // Act
         void Act() =>
             builder
-                .AddEmailPublisher(
-                    name,
-                    options =>
-                    {
-                        options.Host = _container.SmtpHost;
-                        options.Port = _container.SmtpPortMapped;
-                        options.From = "health-checks@example.com";
-                        options.To = ["ops-team@example.com"];
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddEmailPublisher(
-                    name,
-                    options =>
-                    {
-                        options.Host = _container.SmtpHost;
-                        options.Port = _container.SmtpPortMapped;
-                        options.From = "health-checks@example.com";
-                        options.To = ["ops-team@example.com"];
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddEmailPublisher(name, options =>
+                {
+                    options.Host = _container.SmtpHost;
+                    options.Port = _container.SmtpPortMapped;
+                    options.From = "health-checks@example.com";
+                    options.To = ["ops-team@example.com"];
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddEmailPublisher(name, options =>
+                {
+                    options.Host = _container.SmtpHost;
+                    options.Port = _container.SmtpPortMapped;
+                    options.From = "health-checks@example.com";
+                    options.To = ["ops-team@example.com"];
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -340,28 +334,22 @@ public sealed class EmailHealthCheckPublisherTests : IDisposable
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddEmailPublisher(
-            "Internal",
-            options =>
-            {
-                options.Host = _container.SmtpHost;
-                options.Port = _container.SmtpPortMapped;
-                options.From = "health-checks@example.com";
-                options.To = ["internal-ops@example.com"];
-                options.SystemIdentifier = internalIdentifier;
-            }
-        );
-        _ = builder.AddEmailPublisher(
-            "External",
-            options =>
-            {
-                options.Host = _container.SmtpHost;
-                options.Port = _container.SmtpPortMapped;
-                options.From = "health-checks@example.com";
-                options.To = ["external-ops@example.com"];
-                options.SystemIdentifier = externalIdentifier;
-            }
-        );
+        _ = builder.AddEmailPublisher("Internal", options =>
+        {
+            options.Host = _container.SmtpHost;
+            options.Port = _container.SmtpPortMapped;
+            options.From = "health-checks@example.com";
+            options.To = ["internal-ops@example.com"];
+            options.SystemIdentifier = internalIdentifier;
+        });
+        _ = builder.AddEmailPublisher("External", options =>
+        {
+            options.Host = _container.SmtpHost;
+            options.Port = _container.SmtpPortMapped;
+            options.From = "health-checks@example.com";
+            options.To = ["external-ops@example.com"];
+            options.SystemIdentifier = externalIdentifier;
+        });
 
         var provider = services.BuildServiceProvider();
         var publishers = provider.GetServices<IHealthCheckPublisher>().ToArray();

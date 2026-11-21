@@ -286,15 +286,12 @@ public sealed class SlackHealthCheckPublisherTests
     private static IOptionsMonitor<SlackOptions> CreateOptionsMonitor(Action<SlackOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<SlackOptions>(
-            TestName,
-            options =>
-            {
-                options.WebhookUrl = new Uri($"https://hooks.slack.com{WebhookPath}");
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<SlackOptions>(TestName, options =>
+        {
+            options.WebhookUrl = new Uri($"https://hooks.slack.com{WebhookPath}");
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<SlackOptions>>();
     }
 }

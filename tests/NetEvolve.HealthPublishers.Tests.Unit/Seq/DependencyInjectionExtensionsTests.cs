@@ -109,14 +109,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddSeqPublisher(
-            name,
-            options =>
-            {
-                options.ServerUrl = new Uri("https://seq.example.com");
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddSeqPublisher(name, options =>
+        {
+            options.ServerUrl = new Uri("https://seq.example.com");
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<SeqOptions>>().Get(name);
 
@@ -167,14 +164,11 @@ public sealed class DependencyInjectionExtensionsTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
         const string? name = "Test";
-        _ = builder.AddSeqPublisher(
-            name,
-            options =>
-            {
-                options.SystemIdentifier = "checkout-service";
-                options.ServerUrl = new Uri("https://seq.example.com");
-            }
-        );
+        _ = builder.AddSeqPublisher(name, options =>
+        {
+            options.SystemIdentifier = "checkout-service";
+            options.ServerUrl = new Uri("https://seq.example.com");
+        });
         var provider = services.BuildServiceProvider();
 
         // Act

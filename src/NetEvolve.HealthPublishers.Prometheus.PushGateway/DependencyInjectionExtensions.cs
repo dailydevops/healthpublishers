@@ -77,9 +77,8 @@ public static class DependencyInjectionExtensions
             _ = builder.Services.Configure(name, options);
         }
 
-        _ = builder.Services.AddHttpClient(
-            $"{HttpClientNamePrefix}{name}",
-            (provider, client) => ConfigureHttpClient(name, provider, client)
+        _ = builder.Services.AddHttpClient($"{HttpClientNamePrefix}{name}", (provider, client) =>
+            ConfigureHttpClient(name, provider, client)
         );
 
         _ = builder.Services.AddSingleton<IHealthCheckPublisher>(

@@ -185,14 +185,11 @@ public sealed class OpenTelemetryHealthCheckPublisherTests
     private static IOptionsMonitor<OpenTelemetryOptions> CreateOptionsMonitor(Action<OpenTelemetryOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<OpenTelemetryOptions>(
-            TestName,
-            options =>
-            {
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<OpenTelemetryOptions>(TestName, options =>
+        {
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<OpenTelemetryOptions>>();
     }
 

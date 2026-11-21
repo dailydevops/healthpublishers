@@ -623,18 +623,15 @@ public sealed class EmailHealthCheckPublisherTests
     private static IOptionsMonitor<EmailOptions> CreateOptionsMonitor(Action<EmailOptions> configure)
     {
         var services = new ServiceCollection();
-        _ = services.Configure<EmailOptions>(
-            TestName,
-            options =>
-            {
-                options.Host = "smtp.example.com";
-                options.Port = 587;
-                options.From = "health-checks@example.com";
-                options.To = ["ops-team@example.com"];
-                options.SystemIdentifier = "test-system";
-                configure(options);
-            }
-        );
+        _ = services.Configure<EmailOptions>(TestName, options =>
+        {
+            options.Host = "smtp.example.com";
+            options.Port = 587;
+            options.From = "health-checks@example.com";
+            options.To = ["ops-team@example.com"];
+            options.SystemIdentifier = "test-system";
+            configure(options);
+        });
         return services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<EmailOptions>>();
     }
 }

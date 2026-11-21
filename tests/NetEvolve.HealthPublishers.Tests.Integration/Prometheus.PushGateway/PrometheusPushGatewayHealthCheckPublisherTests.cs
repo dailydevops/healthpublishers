@@ -222,24 +222,18 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddPrometheusPushGateway(
-                    name,
-                    options =>
-                    {
-                        options.ServerUrl = _server.ServerUrl;
-                        options.Job = "checkout-service";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddPrometheusPushGateway(
-                    name,
-                    options =>
-                    {
-                        options.ServerUrl = _server.ServerUrl;
-                        options.Job = "checkout-service";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddPrometheusPushGateway(name, options =>
+                {
+                    options.ServerUrl = _server.ServerUrl;
+                    options.Job = "checkout-service";
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddPrometheusPushGateway(name, options =>
+                {
+                    options.ServerUrl = _server.ServerUrl;
+                    options.Job = "checkout-service";
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -258,26 +252,20 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddPrometheusPushGateway(
-            "Internal",
-            options =>
-            {
-                options.ServerUrl = _server.ServerUrl;
-                options.Job = "checkout-service";
-                options.Instance = "checkout-service-01";
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddPrometheusPushGateway(
-            "External",
-            options =>
-            {
-                options.ServerUrl = secondServer.ServerUrl;
-                options.Job = "checkout-service";
-                options.Instance = "checkout-service-01";
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddPrometheusPushGateway("Internal", options =>
+        {
+            options.ServerUrl = _server.ServerUrl;
+            options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddPrometheusPushGateway("External", options =>
+        {
+            options.ServerUrl = secondServer.ServerUrl;
+            options.Job = "checkout-service";
+            options.Instance = "checkout-service-01";
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();
@@ -341,9 +329,8 @@ public sealed class PrometheusPushGatewayHealthCheckPublisherTests
         );
 
         // The last-publish timestamp is excluded too: it is the current unix time and changes on every run.
-        normalized = LastPublishTimestampLine.Replace(
-            normalized,
-            match => match.Value[..match.Value.LastIndexOf(' ')] + " <timestamp>"
+        normalized = LastPublishTimestampLine.Replace(normalized, match =>
+            match.Value[..match.Value.LastIndexOf(' ')] + " <timestamp>"
         );
 
         _ = await Verify(normalized).IgnoreParametersForVerified();

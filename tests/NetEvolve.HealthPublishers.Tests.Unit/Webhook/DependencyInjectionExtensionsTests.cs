@@ -108,14 +108,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddWebhookPublisher(
-            name,
-            options =>
-            {
-                options.Uri = new Uri("https://example.com/webhooks/health");
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddWebhookPublisher(name, options =>
+        {
+            options.Uri = new Uri("https://example.com/webhooks/health");
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<WebhookOptions>>().Get(name);
 
@@ -151,13 +148,11 @@ public sealed class DependencyInjectionExtensionsTests
 
         // Act
         _ = builder
-            .AddWebhookPublisher(
-                "Internal",
-                options => options.Uri = new Uri("https://internal.example.com/webhooks/health")
+            .AddWebhookPublisher("Internal", options =>
+                options.Uri = new Uri("https://internal.example.com/webhooks/health")
             )
-            .AddWebhookPublisher(
-                "External",
-                options => options.Uri = new Uri("https://external.example.com/webhooks/health")
+            .AddWebhookPublisher("External", options =>
+                options.Uri = new Uri("https://external.example.com/webhooks/health")
             );
         var provider = services.BuildServiceProvider();
 

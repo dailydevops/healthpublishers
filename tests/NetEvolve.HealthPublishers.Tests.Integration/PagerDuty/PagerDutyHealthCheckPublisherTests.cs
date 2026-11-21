@@ -217,24 +217,18 @@ public sealed class PagerDutyHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddPagerDutyPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ApiUrl = _server.ServerUrl;
-                        options.RoutingKey = "integration-test-key";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddPagerDutyPublisher(
-                    name,
-                    options =>
-                    {
-                        options.ApiUrl = _server.ServerUrl;
-                        options.RoutingKey = "integration-test-key";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddPagerDutyPublisher(name, options =>
+                {
+                    options.ApiUrl = _server.ServerUrl;
+                    options.RoutingKey = "integration-test-key";
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddPagerDutyPublisher(name, options =>
+                {
+                    options.ApiUrl = _server.ServerUrl;
+                    options.RoutingKey = "integration-test-key";
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -253,24 +247,18 @@ public sealed class PagerDutyHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddPagerDutyPublisher(
-            "Internal",
-            options =>
-            {
-                options.ApiUrl = _server.ServerUrl;
-                options.RoutingKey = "integration-test-key";
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddPagerDutyPublisher(
-            "External",
-            options =>
-            {
-                options.ApiUrl = secondServer.ServerUrl;
-                options.RoutingKey = "integration-test-key";
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddPagerDutyPublisher("Internal", options =>
+        {
+            options.ApiUrl = _server.ServerUrl;
+            options.RoutingKey = "integration-test-key";
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddPagerDutyPublisher("External", options =>
+        {
+            options.ApiUrl = secondServer.ServerUrl;
+            options.RoutingKey = "integration-test-key";
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();

@@ -229,24 +229,18 @@ public sealed class OpsgenieHealthCheckPublisherTests
         // Act
         void Act() =>
             builder
-                .AddOpsgeniePublisher(
-                    name,
-                    options =>
-                    {
-                        options.ApiUrl = _server.ServerUrl;
-                        options.ApiKey = "integration-test-key";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                )
-                .AddOpsgeniePublisher(
-                    name,
-                    options =>
-                    {
-                        options.ApiUrl = _server.ServerUrl;
-                        options.ApiKey = "integration-test-key";
-                        options.SystemIdentifier = "integration-tests";
-                    }
-                );
+                .AddOpsgeniePublisher(name, options =>
+                {
+                    options.ApiUrl = _server.ServerUrl;
+                    options.ApiKey = "integration-test-key";
+                    options.SystemIdentifier = "integration-tests";
+                })
+                .AddOpsgeniePublisher(name, options =>
+                {
+                    options.ApiUrl = _server.ServerUrl;
+                    options.ApiKey = "integration-test-key";
+                    options.SystemIdentifier = "integration-tests";
+                });
 
         // Assert
         _ = Assert.Throws<ArgumentException>(nameof(name), Act);
@@ -265,24 +259,18 @@ public sealed class OpsgenieHealthCheckPublisherTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build()).AddHealthChecks();
 
-        _ = builder.AddOpsgeniePublisher(
-            "Internal",
-            options =>
-            {
-                options.ApiUrl = _server.ServerUrl;
-                options.ApiKey = "integration-test-key";
-                options.SystemIdentifier = "internal-system";
-            }
-        );
-        _ = builder.AddOpsgeniePublisher(
-            "External",
-            options =>
-            {
-                options.ApiUrl = secondServer.ServerUrl;
-                options.ApiKey = "integration-test-key";
-                options.SystemIdentifier = "external-system";
-            }
-        );
+        _ = builder.AddOpsgeniePublisher("Internal", options =>
+        {
+            options.ApiUrl = _server.ServerUrl;
+            options.ApiKey = "integration-test-key";
+            options.SystemIdentifier = "internal-system";
+        });
+        _ = builder.AddOpsgeniePublisher("External", options =>
+        {
+            options.ApiUrl = secondServer.ServerUrl;
+            options.ApiKey = "integration-test-key";
+            options.SystemIdentifier = "external-system";
+        });
 
         var internalHandler = new CapturingHttpMessageHandler();
         var externalHandler = new CapturingHttpMessageHandler();

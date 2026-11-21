@@ -107,14 +107,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddApplicationInsightsPublisher(
-            name,
-            options =>
-            {
-                options.ConnectionString = TestConnectionString;
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddApplicationInsightsPublisher(name, options =>
+        {
+            options.ConnectionString = TestConnectionString;
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<ApplicationInsightsOptions>>().Get(name);
 
@@ -169,9 +166,8 @@ public sealed class DependencyInjectionExtensionsTests
         // Arrange
         const string? name = "Test";
         var services = new ServiceCollection();
-        _ = services.Configure<ApplicationInsightsOptions>(
-            name,
-            options => options.ConnectionString = TestConnectionString
+        _ = services.Configure<ApplicationInsightsOptions>(name, options =>
+            options.ConnectionString = TestConnectionString
         );
         var provider = services.BuildServiceProvider();
 
@@ -187,9 +183,8 @@ public sealed class DependencyInjectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        _ = services.Configure<ApplicationInsightsOptions>(
-            "Other",
-            options => options.ConnectionString = TestConnectionString
+        _ = services.Configure<ApplicationInsightsOptions>("Other", options =>
+            options.ConnectionString = TestConnectionString
         );
         var provider = services.BuildServiceProvider();
 

@@ -107,14 +107,11 @@ public sealed class DependencyInjectionExtensionsTests
         const string? name = "Test";
 
         // Act
-        _ = builder.AddOpsgeniePublisher(
-            name,
-            options =>
-            {
-                options.ApiKey = "test-key";
-                options.SystemIdentifier = "checkout-service";
-            }
-        );
+        _ = builder.AddOpsgeniePublisher(name, options =>
+        {
+            options.ApiKey = "test-key";
+            options.SystemIdentifier = "checkout-service";
+        });
         var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<OpsgenieOptions>>().Get(name);
 
@@ -167,15 +164,12 @@ public sealed class DependencyInjectionExtensionsTests
         var services = new ServiceCollection();
         var builder = services.AddSingleton<IConfiguration>(configuration).AddHealthChecks();
         const string? name = "Test";
-        _ = builder.AddOpsgeniePublisher(
-            name,
-            options =>
-            {
-                options.SystemIdentifier = "checkout-service";
-                options.ApiKey = "test-key";
-                options.ApiUrl = new Uri("https://api.eu.opsgenie.com");
-            }
-        );
+        _ = builder.AddOpsgeniePublisher(name, options =>
+        {
+            options.SystemIdentifier = "checkout-service";
+            options.ApiKey = "test-key";
+            options.ApiUrl = new Uri("https://api.eu.opsgenie.com");
+        });
         var provider = services.BuildServiceProvider();
 
         // Act
@@ -193,9 +187,8 @@ public sealed class DependencyInjectionExtensionsTests
         // Arrange
         const string? name = "Test";
         var services = new ServiceCollection();
-        _ = services.Configure<OpsgenieOptions>(
-            name,
-            options => options.ApiUrl = new Uri("https://api.eu.opsgenie.com")
+        _ = services.Configure<OpsgenieOptions>(name, options =>
+            options.ApiUrl = new Uri("https://api.eu.opsgenie.com")
         );
         var provider = services.BuildServiceProvider();
         using var client = new HttpClient();
